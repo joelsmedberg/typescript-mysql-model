@@ -1,0 +1,35 @@
+{
+  "name": "typescript-mysql-model",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joelsmedberg/typescript-mysql-model.git"
+  },
+  "keywords": [
+    "typescript",
+    "mysql",
+    "orm",
+    "generate",
+    "class",
+    "interface"
+  ],
+  "author": "Joel Smedberg",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/joelsmedberg/typescript-mysql-model/issues"
+  },
+  "homepage": "https://github.com/joelsmedberg/typescript-mysql-model#readme",
+  "dependencies": {
+    "@types/change-case": "^2.3.1",
+    "@types/knex": "0.0.46",
+    "@types/pluralize": "0.0.27",
+    "change-case": "^3.0.1",
+    "knex": "^0.12.9",
+    "pluralize": "^4.0.0"
+  }
+}
