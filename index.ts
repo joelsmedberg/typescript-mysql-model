@@ -1,3 +1,4 @@
-import TestModelBuilder from "./test/test-model-builder";
-
-new TestModelBuilder().init();
+import ModelBuilder from "./lib/model-builder";
+import TsBuilder from "./lib/ts-builder";
+module.exports.ModelBuilder = ModelBuilder;
+module.exports.ModelBuilder = TsBuilder;

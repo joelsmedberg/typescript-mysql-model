@@ -31,7 +31,6 @@
     "change-case": "^3.0.1",
     "knex": "^0.12.9",
     "mysql": "^2.13.0",
-    "mysql2": "^1.2.0",
     "pluralize": "^4.0.0"
   },
   "devDependencies": {
