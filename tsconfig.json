@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "removeComments": false,
+    "noImplicitAny": false,
+    "noImplicitReturns": true,
+    "noImplicitThis": false,
+    "noUnusedLocals": true,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": true,
+    "types": [
+        // add node as an option
+        "node"
+      ],
+      // typeRoots option has been previously configured
+      "typeRoots": [
+        // add path to @types
+        "node_modules/@types"
+      ]
+  },
+  "exclude": [
+    "node_modules"
+  ]
+}
