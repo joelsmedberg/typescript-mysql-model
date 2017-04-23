@@ -53,7 +53,7 @@ export default class ModelBuilder {
     }
 
     private async listViews(): Promise<string[]> {
-        let rows:{tname}[][] = await this.knex.raw(this.listFromDatabase(LIST_TYPE_VIEW));
+        let rows:{tname:string}[][] = await this.knex.raw(this.listFromDatabase(LIST_TYPE_VIEW));
         return rows[0].map(item => item.tname);
     }
 
@@ -61,7 +61,7 @@ export default class ModelBuilder {
      * Lists all the tables in current database
      */
     private async listTables(): Promise<string[]> {
-        let rows:{tname}[][] = await this.knex.raw(this.listFromDatabase(LIST_TYPE_TABLE));
+        let rows:{tname:string}[][] = await this.knex.raw(this.listFromDatabase(LIST_TYPE_TABLE));
         return rows[0].map(item => item.tname);
     }
 

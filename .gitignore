@@ -1,4 +1,4 @@
+node_modules/
 *.js
 *.map
-node_modules/
-test/
+*.d.ts
