@@ -66,20 +66,53 @@ export default class TypedInserter {
         let query = format(middle, insert.toString(), lastPart);
         await this.knex.raw(query);
     }
+    /*** 
+    * @param tableName
+    * @param object
+    * Replaces all tinyint columns with a boolean
+    */    
+    boolfix<T>(tableName: string, object:T):T {
+       var table = this.dbModel[tableName];
+       const BOOL_TYPE = "tinyint";
+       for (var key in table) {
+           if (table[key].type == BOOL_TYPE) {
+               object[key] = !!object[key];
+           }
+       }
+       return object;
+   };
 
-    // /**
-    //  * @param tableName 
-    //  * @param data
-    //  * @param forceInsert
-    //  * Insert an object that already has its primary key among its variables
-    //  */
-    // async insertWithPrimaryKey<T>(tableName:string, data:T, forceInsert?:boolean):Promise<T> {
-    //     data = this.stripNoneBelonging(tableName, data);
-    //     if (Object.keys(data).length > 1 || forceInsert) {
-    //        await this.knex(tableName).insert(data);
-    //     }        
-    //     return data;
-    // }
+   /**
+   Returns the same object with all date fields
+   strings parsed into date objects
+   */
+   datefix<T>(tableName:string, object:T):T {
+       var table = this.dbModel[tableName];
+       const DATE_TYPE = "date";
+       for (var key in table) {
+           var col = table[key];
+           if (col.type == DATE_TYPE && object[key]) {
+               var value:Date = object[key];
+               var isoStr = value.toISOString();
+               object[key] = isoStr.substring(0, 10);
+           }
+       }
+       return object;
+   };
+
+    /**
+     * @param tableName 
+     * @param data
+     * @param forceInsert
+     * Insert an object that already has its primary key among its variables
+     */
+    async insertWithPrimaryKey<T>(tableName:string, data:T, forceInsert?:boolean):Promise<T> {
+        data = this.stripNoneBelonging(tableName, data);
+        if (Object.keys(data).length > 1 || forceInsert) {
+           await this.knex(tableName).insert(data);
+        }        
+        return data;
+    }
 
     /**
      * returns true if the first primary key column is of type int
@@ -120,8 +153,7 @@ export default class TypedInserter {
      */
     getPrimaryKey(tableName: string):string {
         let cols = this.getPkCols(tableName);
-        if (cols == null || cols.length == 0) return null;
-        return cols[0].field;
+        return (cols == null || cols.length == 0)?null:cols[0].field;
     }
 
     /**
