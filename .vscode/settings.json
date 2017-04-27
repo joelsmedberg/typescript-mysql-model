@@ -1,0 +1,14 @@
+{
+    "typescript.tsdk": "./node_modules/typescript/lib",
+    "editor.tabSize": 2,
+    "files.exclude": {
+        "build": true,
+        "node_modules": true,
+        "typings": true,
+        "Scripts": true,
+        ".elasticbeanstalk": true,
+        "**/.git": true,
+        "**/.DS_Store": true,
+        "**/*.js": true
+    }    
+}

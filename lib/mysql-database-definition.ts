@@ -14,6 +14,39 @@ export interface DatabaseTable {
    [columnName: string]: DatabaseColumn; 
 }
 
+export interface TableDictionary {
+    [table: string]: DatabaseTable;
+}
+
+export interface StoredProcedureDictionary { 
+    [sp: string]: StoredProcedure
+}
+
+export interface StoredProcedureParameter {
+    specificName: string;
+    ordinalPosition: number;
+    parameterMode: string;
+    parameterName: string;
+    dataType: string;
+    characterMaximumLength: number;
+    characterOctetLength: number;
+    numericPrecision: number;
+    numericScale: number;
+    datetimePrecision: any;
+    characterSetName: string;
+    collationName: string;
+    dtdIdentifier: string;
+    specificCatalog: string;
+    specificSchema: string;
+    
+}
+
+export interface StoredProcedure {
+    [param:string]: StoredProcedureParameter;
+}
+
 export interface DatabaseSchema {
-    [tableName: string]: DatabaseTable;
+    tables: TableDictionary;
+    views: TableDictionary;
+    storedProcedures: StoredProcedureDictionary;
 }

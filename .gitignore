@@ -3,4 +3,5 @@ node_modules/
 *.map
 *.d.ts
 *.bat
+test/
 build/

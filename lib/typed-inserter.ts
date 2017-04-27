@@ -1,14 +1,32 @@
 import { DatabaseColumn, DatabaseSchema } from "./mysql-database-definition";
 import {format} from 'util';
 import Knex = require('knex');
+import ModelBuilder from "./model-builder";
 
 /**
  * This class serves as a data access object and allowes communication with the mysql server
  * It automatically strips away attributes that not match columns
  */
 export default class TypedInserter {
-    constructor(private dbModel:DatabaseSchema, private knex:Knex){
+    private static promise:Promise<TypedInserter>
+    static async getSingleTonInstance(knex:Knex, dbName?:string):Promise<TypedInserter>{
+        if(!this.promise) {
+            this.promise = new TypedInserter(knex).init(dbName);
+        }        
+        return this.promise;
+    }
 
+    constructor(private knex:Knex, private dbModel?:DatabaseSchema){
+
+    }
+
+    /**
+     * init a database schema if none were provided at constructor
+     */
+    async init(dbName?:string):Promise<TypedInserter>{
+        let modelBuilder = new ModelBuilder(this.knex, dbName);
+        this.dbModel = await modelBuilder.renderDatabaseSchema();
+        return this;
     }
 
     async batchInsert<T>(tableName:string, rows:T[]):Promise<void> {
@@ -21,7 +39,7 @@ export default class TypedInserter {
             await this.insertIgnore(tableName, item);
         }
     }
-
+    
     async batchUpdate<T>(tableName:string, data:T[]):Promise<void> {
         if (data) {
             for (let item of data) {
@@ -72,7 +90,7 @@ export default class TypedInserter {
     * Replaces all tinyint columns with a boolean
     */    
     boolfix<T>(tableName: string, object:T):T {
-       var table = this.dbModel[tableName];
+       var table = this.dbModel.tables[tableName];
        const BOOL_TYPE = "tinyint";
        for (var key in table) {
            if (table[key].type == BOOL_TYPE) {
@@ -87,7 +105,7 @@ export default class TypedInserter {
    strings parsed into date objects
    */
    datefix<T>(tableName:string, object:T):T {
-       var table = this.dbModel[tableName];
+       var table = this.dbModel.tables[tableName];
        const DATE_TYPE = "date";
        for (var key in table) {
            var col = table[key];
@@ -128,7 +146,7 @@ export default class TypedInserter {
     private getPkCols(tableName:string):DatabaseColumn[] {
         if (!tableName) return null;
         var cols: DatabaseColumn[] = [];
-        var table = this.dbModel[tableName];
+        var table = this.dbModel.tables[tableName];
         for (var key in table) {
             if (table[key].isPrimary) {
                 cols.push(table[key]);
@@ -191,10 +209,9 @@ export default class TypedInserter {
             //update existing 
             var pk = this.getPrimaryKey(tableName);
             var pkValue = data[pk];
-            return this.update(tableName, data).then(function (reply) {
-                data[pk] = pkValue;
-                return data;
-            });
+            await this.update(tableName, data);
+            data[pk] = pkValue;
+            return data;            
         } else {
             //new object, insert
             return this.insert(tableName, data);
@@ -208,7 +225,7 @@ export default class TypedInserter {
      * @param data
      */
     private stripNoneBelonging<T>(tableName:string, data:T): T {
-        let table = this.dbModel[tableName];
+        let table = this.dbModel.tables[tableName];
         let copy = {} as any;
         for (let key in data) {
             if (table[key])

@@ -1,13 +1,19 @@
-import { DatabaseColumn, DatabaseTable, DatabaseSchema } from "./mysql-database-definition";
+import { DatabaseColumn, DatabaseTable, DatabaseSchema, TableDictionary,
+    StoredProcedureParameter,StoredProcedureDictionary } from "./mysql-database-definition";
 import * as Knex from 'knex';
+import * as change_case from "change-case";
 
 const LIST_TYPE_VIEW = "VIEW";
 const LIST_TYPE_TABLE = "BASE TABLE";
 export default class ModelBuilder {
-    constructor(private knex:Knex, private databaseName:string){
+    constructor(private knex:Knex, private databaseName?:string){
 
     }
 
+    private async getDatabaseName():Promise<string>{
+        let resp = await this.knex.raw("SELECT DATABASE() as db");
+        return resp[0][0].db;
+    }
     /**
      * Return a copy of an object but with all keys lower case
      */
@@ -65,8 +71,8 @@ export default class ModelBuilder {
         return rows[0].map(item => item.tname);
     }
 
-    private columnArrayToDatabaseSchema(colArrMap:{[key:string]:DatabaseColumn[]}) {
-        var schema:DatabaseSchema = {};
+    private columnArrayToDatabaseSchema(colArrMap:{[key:string]:DatabaseColumn[]}):TableDictionary {
+        var schema:TableDictionary = {};
         for (var tableName in colArrMap) {
             colArrMap[tableName] = colArrMap[tableName].map((col,i) => {
                 col = ModelBuilder.keysToLower<DatabaseColumn>(col);
@@ -100,12 +106,48 @@ export default class ModelBuilder {
         return this.columnArrayToDatabaseSchema(columnArrayMap);
     }
 
-    async renderViewModel() : Promise<DatabaseSchema> {
+    async renderDatabaseSchema(): Promise<DatabaseSchema>{
+        if(!this.databaseName) {
+            this.databaseName = await this.getDatabaseName();
+        }
+        let schema:DatabaseSchema = {
+            tables: await this.renderTableModel(),
+            views: await this.renderViewModel(),
+            storedProcedures: await this.renderStoredProcedures()
+        };      
+        return schema;
+    }
+
+    private async listStoredProcedures():Promise<string[]>{
+        let sps :any[]= await this.knex.raw(`SHOW PROCEDURE STATUS WHERE Db = ?`,[this.databaseName]);
+        return sps[0].map(sp => sp.Name);
+    }
+    private async listStoredProcedureParams():Promise<StoredProcedureParameter[]> {
+        let params:any[] = await this.knex.raw(`SELECT * FROM information_schema.parameters WHERE specific_schema = ?`,[this.databaseName]);
+        return params[0].map(item => {
+            let copy = {};
+            for(let key in item) {
+                copy[change_case.camelCase(key)] = item[key];
+            }
+            return copy as StoredProcedureParameter;
+        });        
+    }
+
+    private async renderStoredProcedures():Promise<StoredProcedureDictionary> {        
+        let storedProcedures = await this.listStoredProcedures();
+        let mapped:StoredProcedureParameter[] = await this.listStoredProcedureParams();
+        let storedProcedureDictionary:StoredProcedureDictionary = {};
+        storedProcedures.forEach(spName => storedProcedureDictionary[spName] = {});
+        mapped.forEach(item => storedProcedureDictionary[item.specificName][item.parameterName] =item);
+        return storedProcedureDictionary;
+    }
+
+    private async renderViewModel() : Promise<TableDictionary> {
         var tables = await this.listViews();
         return await this.renderModel(tables);
     }
 
-    async renderTableModel() : Promise<DatabaseSchema> {
+    private async renderTableModel() : Promise<TableDictionary> {
         var tables = await this.listTables();        
         return this.renderModel(tables);
     }

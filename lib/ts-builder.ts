@@ -1,9 +1,12 @@
-import { DatabaseSchema, DatabaseTable, DatabaseColumn} from "./mysql-database-definition";
+import { DatabaseSchema, TableDictionary} from "./mysql-database-definition";
 import * as pluralize from "pluralize";
 import * as change_case from "change-case";
 import { writeFileSync } from "fs";
 import { InserterBuilder, TableClass } from "./inserter-builder";
-
+import * as Knex from "Knex";
+import ModelBuilder from "./model-builder";
+import SpBuilder from "./sp-builder";
+import InterfaceBuilder from "./interface-builder";
 /**
  * 
  */
@@ -25,17 +28,24 @@ export default class TsBuilder {
         mediumtext: "string",
         varchar: "string"
     };
-    
-    singularizeClassNames:boolean = true;
-    defaultClassName = "export interface";
-    optionalParameters = true;
+    settings = {
+        singularizeClassNames: true,
+        defaultClassName: "export interface",
+        optionalParameters: true,
+        camelCaseFnNames: true
+    }
 
-    constructor(private tables:DatabaseSchema, private views:DatabaseSchema) {
+    constructor(private schema?:DatabaseSchema) {
+    }
 
+    async init(knex:Knex, dbName?:string):Promise<TsBuilder> {
+        let builder = new ModelBuilder(knex,dbName);
+        this.schema = await builder.renderDatabaseSchema();
+        return this;
     }
 
     private toFilename(name:string):string {
-        let filename = this.singularizeClassNames ? pluralize.singular(name):name;
+        let filename = this.settings.singularizeClassNames ? pluralize.singular(name):name;
         return change_case.paramCase(filename) +".ts";
     }
 
@@ -45,23 +55,6 @@ export default class TsBuilder {
             folder += "/";
         }
         return folder;
-    }
-
-    private getTsType(type: string): string  {
-        var ts = this.mysqlTypes[type];
-        if (!ts) {
-            console.error("Unknown type " + type);
-            ts = "any";
-        }
-        return ts;
-    }
-
-    private buildTypeRow(col: DatabaseColumn): string {
-        let tabs = "\t";
-        let optional = this.optionalParameters?"?":"";
-        let tsType = this.getTsType(col.type);
-        let field = col.field;
-        return `${tabs}"${field}"${optional}: ${tsType};\n`;
     }
 
     renderTableFile(folder:string):void{
@@ -86,8 +79,9 @@ export default class TsBuilder {
         folder = TsBuilder.normFolder(folder);
         let tables = this.listTables(searchString);
         let tableClasses = this.renderClasses(tables, folder);
+        let interfaceBuilder = new InterfaceBuilder(this.settings,this.mysqlTypes);
         tableClasses.forEach(tc => {
-            let definition = this.renderTs(tc.tableName, this.tables[tc.tableName]);  
+            let definition = interfaceBuilder.renderTs(tc.tableName, this.schema.tables[tc.tableName]);  
             writeFileSync(tc.fullPath, definition);
         });        
     }
@@ -99,44 +93,52 @@ export default class TsBuilder {
         writeFileSync(folder+this.toFilename("inserter"), new InserterBuilder().renderInserter(tableClasses));
     }
 
+    renderStoredProcedure(folder:string){
+        let spBuiler = new SpBuilder(this.schema.storedProcedures,this.mysqlTypes);
+        writeFileSync(folder+"stored-procedures.ts", spBuiler.renderTemplate());
+    }
+
     private renderClasses(tables:string[], folder:string):TableClass[]{
         return tables.map(t=>{
+            let fnName: string;
+            let fnPlural: string;
+            let className = this.getClassName(t);
+            if(this.settings.camelCaseFnNames){
+                fnName = change_case.camelCase(className);
+                fnPlural = change_case.camelCase(t)
+            }else {
+                fnName = className;
+                fnPlural = t;
+            }
+
             let filename = this.toFilename(t);  
             return {
+                fnName: fnName,
+                fnPlural: fnPlural,
                 className: this.getClassName(t),
                 filename: filename,
                 fullPath: folder+filename,
-                tableName: t,                
+                tableName: t
             } as TableClass
         });   
     }
 
-    private static listTables(schema:DatabaseSchema,searchFor:string = null) {
-        let views = Object.keys(schema);
+    private static listTables(tables:TableDictionary ,searchFor:string = null) {
+        let views = Object.keys(tables);
         if (searchFor) //Filter search terms if applicable        
             views = views.filter(tName => tName.indexOf(searchFor) > -1);
         return views;
     }    
 
     private listTables(searchFor:string = null) {
-        return TsBuilder.listTables(this.tables,searchFor);
+        return TsBuilder.listTables(this.schema.tables,searchFor);
     }
 
     private listViews(searchFor:string = null) {
-        return TsBuilder.listTables(this.views, searchFor);
+        return TsBuilder.listTables(this.schema.views, searchFor);
     }
 
     private getClassName(tableName: string):string {
-        return this.singularizeClassNames ? pluralize.singular(tableName):tableName;        
+        return this.settings.singularizeClassNames ? pluralize.singular(tableName):tableName;        
     }
-
-    private renderTs(tableName: string, table:DatabaseTable):string {
-        let className = this.getClassName(tableName);
-        var stringBuilder = this.defaultClassName + " " + className + " { \n";
-        for (var colName in table) {
-            stringBuilder += this.buildTypeRow(table[colName]);
-        }        
-        stringBuilder += "}";
-        return stringBuilder;
-    }    
 }
