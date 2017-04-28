@@ -55,7 +55,7 @@ export default class SpBuilder {
 
   private renderFunction(procedure:StoredProcedure):string {
     let params:StoredProcedureParameter[] =[];    
-    for(let key in procedure){
+    for(let key in procedure.parameters){
       params.push(procedure.parameters[key]);
     }
     params = params.filter(p=>p.parameterMode=="IN");

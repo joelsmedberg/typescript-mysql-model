@@ -94,6 +94,7 @@ export default class TsBuilder {
     }
 
     renderStoredProcedure(folder:string){
+        folder = TsBuilder.normFolder(folder);
         let spBuiler = new SpBuilder(this.schema.storedProcedures,this.mysqlTypes);
         writeFileSync(folder+"stored-procedures.ts", spBuiler.renderTemplate());
     }
