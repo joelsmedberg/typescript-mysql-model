@@ -20,7 +20,7 @@
     "interface"
   ],
   "author": "Joel Smedberg",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/joelsmedberg/typescript-mysql-model/issues"
   },

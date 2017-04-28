@@ -38,6 +38,10 @@ export default class TsBuilder {
     constructor(private schema?:DatabaseSchema) {
     }
 
+    static async init(knex:Knex):Promise<TsBuilder>{
+        return await new TsBuilder().init(knex);
+    }
+
     async init(knex:Knex, dbName?:string):Promise<TsBuilder> {
         let builder = new ModelBuilder(knex,dbName);
         this.schema = await builder.renderDatabaseSchema();
