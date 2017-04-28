@@ -3,7 +3,7 @@
 import * as pluralize from "pluralize";
 import { DatabaseColumn, DatabaseTable } from "./mysql-database-definition";
 export default class InterfaceBuilder {
-  constructor(private settings, private mysqlTypes){
+  constructor(private settings:{singularizeClassNames: boolean; defaultClassName: string; optionalParameters: boolean;}, private mysqlTypes: {[key:string]:string}){
     
   }
   private buildTypeRow(col: DatabaseColumn): string {

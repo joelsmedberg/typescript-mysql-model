@@ -17,8 +17,8 @@ export default class ModelBuilder {
     /**
      * Return a copy of an object but with all keys lower case
      */
-    static keysToLower<T>(obj:T):T {
-        let newobj:T = {} as any;
+    static keysToLower<T extends {[key:string]:any}>(obj:T):T {
+        let newobj:T = {} as T;
         Object.keys(obj).forEach(key => newobj[key.toLowerCase()] = obj[key]);
         return newobj;
     }
@@ -119,13 +119,13 @@ export default class ModelBuilder {
     }
 
     private async listStoredProcedures():Promise<string[]>{
-        let sps :any[]= await this.knex.raw(`SHOW PROCEDURE STATUS WHERE Db = ?`,[this.databaseName]);
+        let sps :{Name:string}[][]= await this.knex.raw(`SHOW PROCEDURE STATUS WHERE Db = ?`,[this.databaseName]);
         return sps[0].map(sp => sp.Name);
     }
     private async listStoredProcedureParams():Promise<StoredProcedureParameter[]> {
-        let params:any[] = await this.knex.raw(`SELECT * FROM information_schema.parameters WHERE specific_schema = ?`,[this.databaseName]);
+        let params:{[key:string]:any}[][] = await this.knex.raw(`SELECT * FROM information_schema.parameters WHERE specific_schema = ?`,[this.databaseName]);
         return params[0].map(item => {
-            let copy = {};
+            let copy:{[key:string]:any} = {};
             for(let key in item) {
                 copy[change_case.camelCase(key)] = item[key];
             }
@@ -137,8 +137,8 @@ export default class ModelBuilder {
         let storedProcedures = await this.listStoredProcedures();
         let mapped:StoredProcedureParameter[] = await this.listStoredProcedureParams();
         let storedProcedureDictionary:StoredProcedureDictionary = {};
-        storedProcedures.forEach(spName => storedProcedureDictionary[spName] = {});
-        mapped.forEach(item => storedProcedureDictionary[item.specificName][item.parameterName] =item);
+        storedProcedures.forEach(spName => storedProcedureDictionary[spName] = {name:spName, parameters:{}});
+        mapped.forEach(item => storedProcedureDictionary[item.specificName].parameters[item.parameterName] =item);
         return storedProcedureDictionary;
     }
 

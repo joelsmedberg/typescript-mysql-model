@@ -53,11 +53,11 @@ export default class TypedInserter {
      * @param tableName
      * @param data
      */
-    hasPrimaryKey<T>(tableName: string, data:T):boolean {
+    hasPrimaryKey<T extends {[key:string]:any}>(tableName: string, data:T):boolean {
         return !!(data[this.getPrimaryKey(tableName)]);
     };
 
-    private async insert<T>(tableName: string, data: T): Promise<T> {   
+    private async insert<T extends {[key:string]:any}>(tableName: string, data: T): Promise<T> {   
         var reply = await this.knex(tableName).insert(data);
         data[this.getPrimaryKey(tableName)] = reply[0];
         return data;
@@ -89,7 +89,7 @@ export default class TypedInserter {
     * @param object
     * Replaces all tinyint columns with a boolean
     */    
-    boolfix<T>(tableName: string, object:T):T {
+    boolfix<T extends {[key:string]:any}>(tableName: string, object:T):T {
        var table = this.dbModel.tables[tableName];
        const BOOL_TYPE = "tinyint";
        for (var key in table) {
@@ -104,7 +104,7 @@ export default class TypedInserter {
    Returns the same object with all date fields
    strings parsed into date objects
    */
-   datefix<T>(tableName:string, object:T):T {
+   datefix<T extends {[key:string]:any}>(tableName:string, object:T):T {
        var table = this.dbModel.tables[tableName];
        const DATE_TYPE = "date";
        for (var key in table) {
@@ -203,7 +203,7 @@ export default class TypedInserter {
      * @param tableName
      * @param data
      */
-    async setData<T>(tableName:string, data:T):Promise<T> {
+    async setData<T extends {[key:string]:any}>(tableName:string, data:T):Promise<T> {
         data = this.stripNoneBelonging(tableName, data);
         if (this.hasPrimaryKey(tableName, data)) {
             //update existing 
@@ -239,9 +239,9 @@ export default class TypedInserter {
         return await this.update(tableName, data);
     }
 
-    private async update<T>(tableName:string, data:T):Promise<T> {
+    private async update<T extends {[key:string]:any}>(tableName:string, data:T):Promise<T> {
         var pks = this.getPrimaryKeyNames(tableName);
-        var criterions = {};       
+        var criterions : {[key:string]:any} = {};       
         for(let pk of pks){
             criterions[pk] = data[pk];
             delete data[pk];

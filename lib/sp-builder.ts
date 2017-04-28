@@ -38,7 +38,7 @@ export default class SpBuilder {
   renderTemplate():string{
     let strFunctions = [];
     for(let key in this.procedures){
-      strFunctions.push(this.renderFunction(key, this.procedures[key]));
+      strFunctions.push(this.renderFunction(this.procedures[key]));
     }
     let input = {strFunctions: strFunctions};
     let output = this.compiledTemplate(input);
@@ -53,10 +53,10 @@ export default class SpBuilder {
     return param.parameterName+": " + this.getMySqlType(param);
   }
 
-  private renderFunction(name:string, procedure:StoredProcedure):string {
+  private renderFunction(procedure:StoredProcedure):string {
     let params:StoredProcedureParameter[] =[];    
     for(let key in procedure){
-      params.push(procedure[key]);
+      params.push(procedure.parameters[key]);
     }
     params = params.filter(p=>p.parameterMode=="IN");
     params.sort((a,b)=>{return a.ordinalPosition-b.ordinalPosition});
@@ -69,10 +69,10 @@ export default class SpBuilder {
     }
     let typeNameList:string = params.map(p=>this.toTsParamNotation(p)).join(", ");
     let input = {
-      name:name,
+      name:procedure.name,
       typeNameList: typeNameList,
       commaSepParamNames:commaSepParamNames,
-      fnName: change_case.camelCase(name)
+      fnName: change_case.camelCase(procedure.name)
   };
     return this.compiledFunctionTemplate(input);
   }

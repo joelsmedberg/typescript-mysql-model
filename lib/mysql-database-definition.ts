@@ -41,8 +41,11 @@ export interface StoredProcedureParameter {
     
 }
 
-export interface StoredProcedure {
-    [param:string]: StoredProcedureParameter;
+export interface StoredProcedure {    
+    name: string;
+    parameters: {
+        [param:string]: StoredProcedureParameter;
+    }
 }
 
 export interface DatabaseSchema {
