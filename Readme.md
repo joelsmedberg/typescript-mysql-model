@@ -15,28 +15,36 @@
 Just initalize with a knex instance and call respective function to start generating.
 
 ```js
-import {TsBuilder} from "typescript-mysql-model";
-import * as Knex from "knex";
+import { TsBuilder } from "typescript-mysql-model"
+import * as Knex from "knex"
 
 // Create a knex instance
 var knex = Knex({
-    client: 'mysql',
-    connection: {
-        host: 'myproject.cz2n3ug213d3f.eu-west-1.rds.amazonaws.com',
-        user: 'myUserName',
-        password: 'MySecretPassword123',
-        database: "my_database",
-    },
+  client: 'mysql',
+  connection: {
+    host: 'ensembldb.ensembl.org',
+    user: 'anonymous',
+    password: '',
+    database: 'takifugu_rubripes_core_82_4',
+  },
 });
 
-// init and call respective function with a folder that exists
-let tsBuilder = await new TsBuilder().init(knex);        
-tsBuilder.renderClassFiles("./my-interfaces/");
-tsBuilder.renderInserter("./some-other-folder");
-tsBuilder.renderTableFile("./some-other-folder");
-tsBuilder.renderViewFile("./some-other-folder");
-tsBuilder.renderStoredProcedure("./some-other-folder");
+async function build() {
+  // init and call respective function with a folder that exists
+  let tsBuilder = await new TsBuilder().init(knex)
+  tsBuilder.renderClassFiles('./db/inserter/')
+  tsBuilder.renderInserter('./db/inserter/')
+  tsBuilder.renderTableFile('./db/')
+  tsBuilder.renderViewFile('./db/')
+  tsBuilder.renderStoredProcedure('./db/')
+  knex.destroy()
+}
+
+build()
 ```
+## Example
+
+[Sample project](https://github.com/AntonLapshin/typescript-mysql-model-sample)
 
 ## License
 
