@@ -9,6 +9,6 @@
         ".elasticbeanstalk": true,
         "**/.git": true,
         "**/.DS_Store": true,
-        "**/*.js": true
+        "**/*.js": false
     }    
 }

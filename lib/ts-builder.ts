@@ -7,8 +7,9 @@ import * as Knex from "Knex";
 import ModelBuilder from "./model-builder";
 import SpBuilder from "./sp-builder";
 import InterfaceBuilder from "./interface-builder";
+import TableColumnsBuilder from "./table-columns-builder";
 /**
- * 
+ *
  */
 export default class TsBuilder {
     mysqlTypes = {
@@ -77,6 +78,13 @@ export default class TsBuilder {
         let arr = this.listViews().sort().map(t => "\tstatic " + change_case.constantCase(t) + " = '" + t + "';");
         let content = meta + start + arr.join("\n") + "\n}";       
         writeFileSync(folder+"views.ts", content); 
+    }
+
+    renderColumnsFile(folder:string):void{
+        folder = TsBuilder.normFolder(folder);
+        let colBuilder = new TableColumnsBuilder(this.schema);
+        let content = colBuilder.renderTemplate();
+        writeFileSync(folder+"columns.ts", content); 
     }
 
     renderClassFiles(folder:string, searchString?:string){
