@@ -12,7 +12,7 @@ export default class Inserter {
 
     }
 
-    async insert<T>(tableName:string, data:T) {
+    async insert<T>(tableName:string, data:T | T[]) {
         let q =  this.knex(tableName).insert(data);
         try {
             return await this.knex(tableName).insert(data);
@@ -30,7 +30,7 @@ export default class Inserter {
 {{#each batchInserters}}{{{this}}}{{/each}}
 }`;
 const INSERT_TEMPLATE = `
-    async insert{{fnName}}(item:{{className}}):Promise<{{className}}>{
+    async insert{{fnName}}(item:{{className}} | {{className}}[]):Promise<{{className}}>{
         return await this.insert("{{tableName}}", item);
     }
 `;

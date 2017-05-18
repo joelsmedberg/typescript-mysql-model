@@ -98,6 +98,16 @@ export default class TsBuilder {
         });        
     }
 
+    renderViewClassFiles(folder:string, searchString?:string){
+        folder = TsBuilder.normFolder(folder);
+        let tables = this.listViews(searchString);
+        let interfaceBuilder = new InterfaceBuilder(this.settings,this.mysqlTypes);
+        this.renderClasses(tables, folder).forEach(tc => {
+            let definition = interfaceBuilder.renderTs(tc.tableName, this.schema.views[tc.tableName]);  
+            writeFileSync(tc.fullPath, definition);
+        });        
+    }
+
     renderInserter(folder:string){
         folder = TsBuilder.normFolder(folder);
         let tables = this.listTables();

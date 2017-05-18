@@ -1,7 +1,6 @@
-// import * as handlebars from "handlebars";
-// import * as change_case from "change-case";
 import * as pluralize from "pluralize";
 import { DatabaseColumn, DatabaseTable } from "./mysql-database-definition";
+import * as change_case from "change-case";
 export default class InterfaceBuilder {
   constructor(private settings:{singularizeClassNames: boolean; defaultClassName: string; optionalParameters: boolean;}, private mysqlTypes: {[key:string]:string}){
     
@@ -36,6 +35,7 @@ export default class InterfaceBuilder {
   }
 
   private getClassName(tableName: string):string {
-    return this.settings.singularizeClassNames ? pluralize.singular(tableName):tableName;        
+    let name = this.settings.singularizeClassNames ? pluralize.singular(tableName):tableName;        
+    return change_case.pascalCase(name);
   }
 }
