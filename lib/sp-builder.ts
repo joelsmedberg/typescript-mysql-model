@@ -5,7 +5,7 @@ const LINE = "let query = `CALL ${name}(${questionMarks});`;   ";
 const template = `/**
  * Auto generated, do not modify!
  */
-import * as Knex from "Knex";
+import * as Knex from "knex";
 export default class StoredProcedures {
   constructor(private knex:Knex){
 

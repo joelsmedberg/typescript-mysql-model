@@ -3,7 +3,7 @@ import * as pluralize from "pluralize";
 import * as change_case from "change-case";
 import { writeFileSync } from "fs";
 import { InserterBuilder, TableClass } from "./inserter-builder";
-import * as Knex from "Knex";
+import * as Knex from "knex";
 import ModelBuilder from "./model-builder";
 import SpBuilder from "./sp-builder";
 import InterfaceBuilder from "./interface-builder";
