@@ -27,7 +27,8 @@ export default class TsBuilder {
         text: "string",
         longtext: "string",
         mediumtext: "string",
-        varchar: "string"
+        varchar: "string",
+        char: "string"
     };
     settings = {
         singularizeClassNames: true,
