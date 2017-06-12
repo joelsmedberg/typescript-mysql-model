@@ -58,7 +58,7 @@ export class InserterBuilder {
         this.compiledBatchInsertTemplate = handlebars.compile(BATCH_INSERT_TEMPLATE);
     }
 
-    renderInserter(tables:TableClass[]):string{
+    renderInserter(tables:TableClass[], relativePath:string = "./"):string{
         tables = JSON.parse(JSON.stringify(tables));
         tables.forEach(t=>{
             t.fnName = change_case.upperCaseFirst(t.fnName)
@@ -67,14 +67,14 @@ export class InserterBuilder {
         let input = {
             inserters: tables.map(t=>this.compiledInsertTemplate(t)),
             batchInserters: tables.map(t=>this.compiledBatchInsertTemplate(t)),
-            imports: tables.map(t=>this.renderImportRow(t))
+            imports: tables.map(t=>this.renderImportRow(t, relativePath))
         };
         return this.compiledTemplate(input);
     }
 
-    private renderImportRow(table:TableClass):string {
+    private renderImportRow(table:TableClass, relativePath:string):string {
         table = JSON.parse(JSON.stringify(table));
         table.filename = table.filename.replace(".ts","");        
-        return `import {${table.className}} from "./${table.filename}"`;        
+        return `import {${table.className}} from "${relativePath}${table.filename}"`;        
     }
 }

@@ -12,7 +12,7 @@ export default class StoredProcedures {
   }
 
   async callSp(name: string, ...args:any[]):Promise<any>{
-    let questionMarks = args.map(item => "?").join(", ");
+    let questionMarks = args.map(() => "?").join(", ");
     ${LINE}
     let resp = await this.knex.raw(query,args);
     return resp[0][0];

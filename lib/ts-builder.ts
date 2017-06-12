@@ -109,11 +109,11 @@ export default class TsBuilder {
         });        
     }
 
-    renderInserter(folder:string){
+    renderInserter(folder:string, interfaceFolder:string){
         folder = TsBuilder.normFolder(folder);
         let tables = this.listTables();
-        let tableClasses = this.renderClasses(tables, folder);
-        writeFileSync(folder+this.toFilename("inserter"), new InserterBuilder().renderInserter(tableClasses));
+        let tableClasses = this.renderClasses(tables, interfaceFolder);
+        writeFileSync(folder+this.toFilename("inserter"), new InserterBuilder().renderInserter(tableClasses,interfaceFolder));
     }
 
     renderStoredProcedure(folder:string){
