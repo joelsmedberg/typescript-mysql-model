@@ -1,4 +1,4 @@
-export interface DatabaseColumn {
+export interface IDatabaseColumn {
     "extra": string;
     "default"?: any;
     "key": string;
@@ -8,21 +8,21 @@ export interface DatabaseColumn {
     "length": number;
     "isPrimary": boolean;
     "index": number;
-};
-
-export interface DatabaseTable {
-   [columnName: string]: DatabaseColumn; 
 }
 
-export interface TableDictionary {
-    [table: string]: DatabaseTable;
+export interface IDatabaseTable {
+   [columnName: string]: IDatabaseColumn;
 }
 
-export interface StoredProcedureDictionary { 
-    [sp: string]: StoredProcedure
+export interface ITableDictionary {
+    [table: string]: IDatabaseTable;
 }
 
-export interface StoredProcedureParameter {
+export interface IStoredProcedureDictionary {
+    [sp: string]: IStoredProcedure;
+}
+
+export interface IStoredProcedureParameter {
     specificName: string;
     ordinalPosition: number;
     parameterMode: string;
@@ -38,18 +38,17 @@ export interface StoredProcedureParameter {
     dtdIdentifier: string;
     specificCatalog: string;
     specificSchema: string;
-    
 }
 
-export interface StoredProcedure {    
+export interface IStoredProcedure {
     name: string;
     parameters: {
-        [param:string]: StoredProcedureParameter;
-    }
+        [param: string]: IStoredProcedureParameter;
+    };
 }
 
-export interface DatabaseSchema {
-    tables: TableDictionary;
-    views: TableDictionary;
-    storedProcedures: StoredProcedureDictionary;
+export interface IDatabaseSchema {
+    tables: ITableDictionary;
+    views: ITableDictionary;
+    storedProcedures: IStoredProcedureDictionary;
 }

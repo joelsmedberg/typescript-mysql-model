@@ -1,6 +1,6 @@
-import { StoredProcedureDictionary, StoredProcedure, StoredProcedureParameter } from "./mysql-database-definition";
-import * as handlebars from "handlebars";
 import * as change_case from "change-case";
+import * as handlebars from "handlebars";
+import { IStoredProcedure, IStoredProcedureDictionary, IStoredProcedureParameter } from "./mysql-database-definition";
 const LINE = "let query = `CALL ${name}(${questionMarks});`;   ";
 const template = `/**
  * Auto generated, do not modify!
@@ -28,52 +28,54 @@ const fnTemplate = `
 `;
 
 export default class SpBuilder {
-  private compiledTemplate:HandlebarsTemplateDelegate;
-  private compiledFunctionTemplate:HandlebarsTemplateDelegate;
-  constructor(private procedures: StoredProcedureDictionary, private types:{[key:string]:string}){
+  private compiledTemplate: HandlebarsTemplateDelegate;
+  private compiledFunctionTemplate: HandlebarsTemplateDelegate;
+  constructor(private procedures: IStoredProcedureDictionary, private types: { [key: string]: string }) {
     this.compiledTemplate = handlebars.compile(template);
     this.compiledFunctionTemplate = handlebars.compile(fnTemplate);
   }
 
-  renderTemplate():string{
-    let strFunctions = [];
-    for(let key in this.procedures){
+  public renderTemplate(): string {
+    const strFunctions = [];
+    for (const key in this.procedures) {
       strFunctions.push(this.renderFunction(this.procedures[key]));
     }
-    let input = {strFunctions: strFunctions};
-    let output = this.compiledTemplate(input);
+    const input = { strFunctions: strFunctions };
+    const output = this.compiledTemplate(input);
     return output;
   }
 
-  private getMySqlType(param:StoredProcedureParameter):string {
+  private getMySqlType(param: IStoredProcedureParameter): string {
     return this.types[param.dataType];
   }
 
-  private toTsParamNotation(param: StoredProcedureParameter):string{    
-    return param.parameterName+": " + this.getMySqlType(param);
+  private toTsParamNotation(param: IStoredProcedureParameter): string {
+    return param.parameterName + ": " + this.getMySqlType(param);
   }
 
-  private renderFunction(procedure:StoredProcedure):string {
-    let params:StoredProcedureParameter[] =[];    
-    for(let key in procedure.parameters){
+  private renderFunction(procedure: IStoredProcedure): string {
+    let params: IStoredProcedureParameter[] = [];
+    for (const key in procedure.parameters) {
       params.push(procedure.parameters[key]);
     }
-    params = params.filter(p=>p.parameterMode=="IN");
-    params.sort((a,b)=>{return a.ordinalPosition-b.ordinalPosition});
+    params = params.filter(p => p.parameterMode === "IN");
+    params.sort((a, b) => {
+      return a.ordinalPosition - b.ordinalPosition;
+    });
 
-    let commaSepParamNames: string = params.map(p=>p.parameterName).join(", ");
-    if(params.length == 0){
-      commaSepParamNames = "";      
-    }else {
+    let commaSepParamNames: string = params.map(p => p.parameterName).join(", ");
+    if (params.length === 0) {
+      commaSepParamNames = "";
+    } else {
       commaSepParamNames = ", " + commaSepParamNames;
     }
-    let typeNameList:string = params.map(p=>this.toTsParamNotation(p)).join(", ");
-    let input = {
-      name:procedure.name,
-      typeNameList: typeNameList,
-      commaSepParamNames:commaSepParamNames,
-      fnName: change_case.camelCase(procedure.name)
-  };
+    const typeNameList: string = params.map(p => this.toTsParamNotation(p)).join(", ");
+    const input = {
+      commaSepParamNames: commaSepParamNames,
+      fnName: change_case.camelCase(procedure.name),
+      name: procedure.name,
+      typeNameList: typeNameList
+    };
     return this.compiledFunctionTemplate(input);
   }
 }
