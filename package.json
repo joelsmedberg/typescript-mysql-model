@@ -28,18 +28,15 @@
   "dependencies": {
     "change-case": "^3.0.1",
     "handlebars": "^4.0.6",
-    "knex": "^0.12.9",
+    "knex": "^0.13.0",
     "mysql": "^2.13.0",
-    "pluralize": "^4.0.0"
+    "pluralize": "^5.0.0"
   },
   "devDependencies": {
-    "mocha": "^3.2.0",
     "@types/handlebars": "^4.0.32",
-    "@types/change-case": "^2.3.1",
-    "@types/knex": "0.0.46",
+    "@types/knex": "0.0.56",
     "@types/pluralize": "0.0.27",
-    "@types/node": "^7.0.13",
-    "codelyzer": "^3.1.2",
+    "@types/node": "^8.0.11",
     "tslint": "^5.5.0"
   }
 }
