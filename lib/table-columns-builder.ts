@@ -4,6 +4,7 @@ import { IDatabaseSchema, IDatabaseTable, ITableDictionary } from "./mysql-datab
 const template = `/**
  * Auto generated, do not modify!
  */
+/* tslint:disable */
 export default class Columns {
     {{#each tables}}{{{this}}}{{/each}}
 }
