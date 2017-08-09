@@ -14,6 +14,16 @@ export default class Inserter {
 
     }
 
+    async replaceInto<T>(tableName:string, arr:T[]|T):Promise<void> {
+      let qry= this.knex(tableName).insert(arr as any).toString();
+      await this.knex.raw(qry.replace("insert", "replace"));				
+    }
+
+    async insertIgnore<T>(tableName:string, arr:T[]|T):Promise<void> {
+      let qry= this.knex(tableName).insert(arr as any).toString();
+      await this.knex.raw(qry.replace("insert", "insert ignore"));				
+    }
+
     async insert<T>(tableName: string, data: T | T[]) {
         let q =  this.knex(tableName).insert(data);
         try {
