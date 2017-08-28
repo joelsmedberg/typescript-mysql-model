@@ -3,6 +3,7 @@ import { writeFileSync } from "fs";
 import * as Knex from "knex";
 import * as pluralize from "pluralize";
 import { InserterBuilder } from "./inserter-builder";
+import { GettersBuilder } from "./getter-builder";
 import InterfaceBuilder from "./interface-builder";
 import {ISetting} from "./isetting";
 import ModelBuilder from "./model-builder";
@@ -127,6 +128,14 @@ export default class TsBuilder {
         writeFileSync(folder + this.toFilename("inserter"), inserterCotent);
     }
 
+    public renderGetter(folder: string, interfaceFolder: string) {
+        folder = TsBuilder.normFolder(folder);
+        const tables = this.listTables();
+        const tableClasses = this.renderClasses(tables, interfaceFolder);
+        const inserterCotent = new GettersBuilder().renderInserter(tableClasses, interfaceFolder);
+        writeFileSync(folder + this.toFilename("getter"), inserterCotent);
+    }
+    
     public renderStoredProcedure(folder: string) {
         folder = TsBuilder.normFolder(folder);
         const spBuiler = new SpBuilder(this.schema.storedProcedures, this.mysqlTypes);
