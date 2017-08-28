@@ -35,16 +35,13 @@ export default class Getter {
 {{#each counters}}{{{this}}}{{/each}}
 }`;
 const GET_TEMPLATE = `
-    public get{{fnName}}(limit: number = 1000, fn?: (knex: Knex.QueryBuilder) => Knex.QueryBuilder): Promise<prefixedClassName[]> {
-        return this.getFromTable({{tableName}}, limit, fn);
+    public get{{fnPlural}}(limit: number = 1000, fn?: (knex: Knex.QueryBuilder) => Knex.QueryBuilder): Promise<{{prefixedClassName}}[]> {
+        return this.getFromTable("{{tableName}}", limit, fn);
     }
 `;
 const COUNT_TEMPLATE = `
-    public countCompanies(fn?: (knex: Knex.QueryBuilder) => Knex.QueryBuilder): Promise<number> {
-        return this.countTable(Tables.COMPANIES, fn);
-    }
-    async count{{fnPlural}}(fn?: (knex: Knex.QueryBuilder) => Knex.QueryBuilder): Promise<number> {
-        return this.countTable({{tableName}}, fn);
+    public count{{fnPlural}}(fn?: (knex: Knex.QueryBuilder) => Knex.QueryBuilder): Promise<number> {
+        return this.countTable("{{tableName}}", fn);
     }
 `;
 
@@ -61,6 +58,7 @@ export class GettersBuilder {
 
     public renderInserter(tables: TableClass[], relativePath: string = "./"): string {
         tables = JSON.parse(JSON.stringify(tables));
+        
         tables.forEach(t => {
             t.fnName = change_case.upperCaseFirst(t.fnName);
             t.fnPlural = change_case.upperCaseFirst(t.fnPlural);
