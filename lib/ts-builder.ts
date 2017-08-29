@@ -11,6 +11,9 @@ import { IDatabaseSchema, ITableDictionary } from "./mysql-database-definition";
 import SpBuilder from "./sp-builder";
 import TableColumnsBuilder from "./table-columns-builder";
 import { TableClass } from "./table-class";
+import { SchemaOperator } from "./schema-operator-bulder";
+import { DefinitionBuilder } from "./definition-builder";
+import { UpdateBuilder } from "./update-builder";
 
 export default class TsBuilder {
     public static async init(knex: Knex): Promise<TsBuilder> {
@@ -75,6 +78,26 @@ export default class TsBuilder {
         return this;
     }
 
+    public renderDefault(folder: string, interfaceFolder: string, relativeInterfaceFolder: string = "./interfaces/") {
+        console.log("Generating table file");
+        this.renderTableFile(folder);
+        console.log("Generating view file");
+        this.renderViewFile(folder);
+        console.log("Generating column file");
+        this.renderColumnsFile(folder);
+        console.log("Generating sp file");
+        this.renderStoredProcedure(folder);
+        console.log("Generating class files");
+        this.renderClassFiles(interfaceFolder);
+        console.log("Render view class files");
+        this.renderViewClassFiles(interfaceFolder);
+        console.log("Render inserter file");
+        this.renderInserter(folder, relativeInterfaceFolder);
+        console.log("Render getter file");
+        this.renderGetter(folder, relativeInterfaceFolder);
+        this.renderSchemaOperator(folder, relativeInterfaceFolder);
+    }
+
     public renderTableFile(folder: string): void {
         folder = TsBuilder.normFolder(folder);
         const start = "export default class Tables { \n";
@@ -132,8 +155,20 @@ export default class TsBuilder {
         folder = TsBuilder.normFolder(folder);
         const tables = this.listTables();
         const tableClasses = this.renderClasses(tables, interfaceFolder);
+        tableClasses.push(...this.renderClasses(this.listViews(), interfaceFolder));
         const inserterCotent = new GettersBuilder().renderInserter(tableClasses, interfaceFolder);
         writeFileSync(folder + this.toFilename("getter"), inserterCotent);
+    }
+
+    public renderSchemaOperator(folder: string, interfaceFolder: string) {
+        folder = TsBuilder.normFolder(folder);
+        writeFileSync(folder + this.toFilename("schema-operator"), SchemaOperator.template);
+        let schemaClass = new DefinitionBuilder(this.schema).renderSchema();
+        writeFileSync(folder + this.toFilename("definition"), schemaClass);
+
+        const tableClasses = this.renderClasses(this.listTables(), interfaceFolder);
+        const inserterCotent = new UpdateBuilder().renderUpdater(tableClasses, interfaceFolder);
+        writeFileSync(folder + this.toFilename("updater"), inserterCotent);
     }
     
     public renderStoredProcedure(folder: string) {

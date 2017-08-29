@@ -9,10 +9,13 @@ import {
 const LIST_TYPE_VIEW = "VIEW";
 const LIST_TYPE_TABLE = "BASE TABLE";
 export default class ModelBuilder {
+    public static init(knex: Knex): Promise<IDatabaseSchema> {
+        return new ModelBuilder(knex).renderDatabaseSchema();
+    }
     /**
      * Return a copy of an object but with all keys lower case
      */
-    public static keysToLower<T extends { [key: string]: any }>(obj: T): T {
+    private static keysToLower<T extends { [key: string]: any }>(obj: T): T {
         const newobj: T = {} as T;
         Object.keys(obj).forEach(key => newobj[key.toLowerCase()] = obj[key]);
         return newobj;
