@@ -5,15 +5,14 @@ import * as pluralize from "pluralize";
 import { InserterBuilder } from "./inserter-builder";
 import { GettersBuilder } from "./getter-builder";
 import InterfaceBuilder from "./interface-builder";
-import {ISetting} from "./isetting";
+import { ISetting } from "./isetting";
 import ModelBuilder from "./model-builder";
 import { IDatabaseSchema, ITableDictionary } from "./mysql-database-definition";
 import SpBuilder from "./sp-builder";
 import TableColumnsBuilder from "./table-columns-builder";
 import { TableClass } from "./table-class";
-import { SchemaOperator } from "./schema-operator-bulder";
-import { DefinitionBuilder } from "./definition-builder";
 import { UpdateBuilder } from "./update-builder";
+import { DefinitionBuilder } from "./definition-builder";
 
 export default class TsBuilder {
     public static async init(knex: Knex): Promise<TsBuilder> {
@@ -59,6 +58,8 @@ export default class TsBuilder {
         varchar: "string"
     };
 
+
+
     public settings: ISetting = {
         appendIToDeclaration: true,
         appendIToFileName: true,
@@ -70,6 +71,12 @@ export default class TsBuilder {
     };
 
     constructor(private schema?: IDatabaseSchema) {
+    }
+
+    public getTypeMap(): Map<string, string> {
+        const map = new Map<string, string>();
+        Object.keys(this.mysqlTypes).forEach((key:string) => map.set(key, (this.mysqlTypes as any)[key]));
+        return map;
     }
 
     public async init(knex: Knex, dbName?: string): Promise<TsBuilder> {
@@ -125,7 +132,7 @@ export default class TsBuilder {
     public renderClassFiles(folder: string, searchString?: string) {
         folder = TsBuilder.normFolder(folder);
         const tables = this.listTables(searchString);
-        const tableClasses = this.renderClasses(tables, folder);
+        const tableClasses = this.renderClasses(tables, folder, true);
         const interfaceBuilder = new InterfaceBuilder(this.settings, this.mysqlTypes);
         tableClasses.forEach(tc => {
             const definition = interfaceBuilder.renderTs(tc, this.schema.tables[tc.tableName]);
@@ -135,9 +142,9 @@ export default class TsBuilder {
 
     public renderViewClassFiles(folder: string, searchString?: string) {
         folder = TsBuilder.normFolder(folder);
-        const tables = this.listViews(searchString);
+        const views = this.listViews(searchString);
         const interfaceBuilder = new InterfaceBuilder(this.settings, this.mysqlTypes);
-        this.renderClasses(tables, folder).forEach(tc => {
+        this.renderClasses(views, folder, true).forEach(tc => {
             const definition = interfaceBuilder.renderTs(tc, this.schema.views[tc.tableName]);
             writeFileSync(tc.fullPath, definition);
         });
@@ -146,31 +153,31 @@ export default class TsBuilder {
     public renderInserter(folder: string, interfaceFolder: string) {
         folder = TsBuilder.normFolder(folder);
         const tables = this.listTables();
-        const tableClasses = this.renderClasses(tables, interfaceFolder);
-        const inserterCotent = new InserterBuilder().renderInserter(tableClasses, interfaceFolder);
+        const tableClasses = this.renderClasses(tables, interfaceFolder, true);
+        const inserterCotent = new InserterBuilder().render(tableClasses, interfaceFolder);
         writeFileSync(folder + this.toFilename("inserter"), inserterCotent);
     }
 
     public renderGetter(folder: string, interfaceFolder: string) {
         folder = TsBuilder.normFolder(folder);
         const tables = this.listTables();
-        const tableClasses = this.renderClasses(tables, interfaceFolder);
-        tableClasses.push(...this.renderClasses(this.listViews(), interfaceFolder));
-        const inserterCotent = new GettersBuilder().renderInserter(tableClasses, interfaceFolder);
+        const tableClasses = this.renderClasses(tables, interfaceFolder, true);
+        tableClasses.push(...this.renderClasses(this.listViews(), interfaceFolder, false));
+        const inserterCotent = new GettersBuilder(this.schema, this.getTypeMap()).render(tableClasses, interfaceFolder);
         writeFileSync(folder + this.toFilename("getter"), inserterCotent);
     }
 
     public renderSchemaOperator(folder: string, interfaceFolder: string) {
         folder = TsBuilder.normFolder(folder);
-        writeFileSync(folder + this.toFilename("schema-operator"), SchemaOperator.template);
+        // writeFileSync(folder + this.toFilename("schema-operator"), SchemaOperator.template);
         let schemaClass = new DefinitionBuilder(this.schema).renderSchema();
         writeFileSync(folder + this.toFilename("definition"), schemaClass);
 
-        const tableClasses = this.renderClasses(this.listTables(), interfaceFolder);
+        const tableClasses = this.renderClasses(this.listTables(), interfaceFolder, true);
         const inserterCotent = new UpdateBuilder().renderUpdater(tableClasses, interfaceFolder);
         writeFileSync(folder + this.toFilename("updater"), inserterCotent);
     }
-    
+
     public renderStoredProcedure(folder: string) {
         folder = TsBuilder.normFolder(folder);
         const spBuiler = new SpBuilder(this.schema.storedProcedures, this.mysqlTypes);
@@ -178,12 +185,12 @@ export default class TsBuilder {
         writeFileSync(folder + filename, spBuiler.renderTemplate());
     }
 
-    private getMetaText() :string {
+    private getMetaText(): string {
         const meta = `/**\n * Autogenerated class containing all the tables, DO NOT MODIFY\n */\n`;
         return meta + "/* tslint:disable */\n";
     }
 
-    private renderClasses(tables: string[], folder: string): TableClass[] {
+    private renderClasses(tables: string[], folder: string, isTable: boolean): TableClass[] {
         return tables.map(t => {
             let fnName: string;
             let fnPlural: string;
@@ -204,7 +211,8 @@ export default class TsBuilder {
                 fnName: fnName,
                 fnPlural: fnPlural,
                 fullPath: folder + filename,
-                tableName: t
+                tableName: t,
+                isTable: isTable
             } as TableClass;
         });
     }
@@ -221,8 +229,8 @@ export default class TsBuilder {
         let className = this.settings.singularizeClassNames ? pluralize.singular(tableName) : tableName;
         return className;
     }
-    
-    private getPrefixedClassName(tableName:string): string {
+
+    private getPrefixedClassName(tableName: string): string {
         const preI = this.settings.appendIToDeclaration ? "I" : "";
         return preI + this.getClassName(tableName);
     }
@@ -237,10 +245,10 @@ export default class TsBuilder {
 
     private toFilename(name: string): string {
         let filename = this.settings.singularizeClassNames ? pluralize.singular(name) : name;
-        filename = change_case.paramCase(filename);        
+        filename = change_case.paramCase(filename);
         // if (filename.startsWith("i-") && this.settings.appendIToDeclaration) {
         //     filename = filename.replace("i-", "i");
         // }
-        return change_case.paramCase(filename) + this.getFilenameEnding() ;
+        return change_case.paramCase(filename) + this.getFilenameEnding();
     }
 }

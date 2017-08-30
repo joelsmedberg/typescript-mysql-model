@@ -7,7 +7,7 @@ const TEMPLATE = `/**
 /* tslint:disable */
 import Knex = require("knex");
 import { IDatabaseSchema } from "typescript-mysql-model/lib/mysql-database-definition";
-import { SchemaOperator } from "./schema-operator.generated";
+import { SchemaOperator } from "typescript-mysql-model";
 {{#each imports}}{{{this}}}
 {{/each}}
 

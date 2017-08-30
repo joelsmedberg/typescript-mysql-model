@@ -6,4 +6,5 @@ export class TableClass {
     fnName: string;
     fnPlural: string;
     prefixedClassName: string;
+    isTable: boolean;
 }

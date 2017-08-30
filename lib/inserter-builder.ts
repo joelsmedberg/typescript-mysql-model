@@ -63,7 +63,7 @@ export class InserterBuilder {
         this.compiledBatchInsertTemplate = handlebars.compile(BATCH_INSERT_TEMPLATE);
     }
 
-    public renderInserter(tables: TableClass[], relativePath: string = "./"): string {
+    public render(tables: TableClass[], relativePath: string = "./"): string {
         tables = JSON.parse(JSON.stringify(tables));
         tables.forEach(t => {
             t.fnName = change_case.upperCaseFirst(t.fnName);
