@@ -18,7 +18,11 @@ export default class Updater extends SchemaOperator {
     this.definition = definition;
   }
 
-  private async update<T extends { [key: string]: any }>(tableName: string,
+  protected async runQuery(q: Knex.QueryBuilder) {
+    await q;
+  }
+
+  protected async update<T extends { [key: string]: any }>(tableName: string,
     data: T, fn?: (knex: Knex.QueryBuilder) => Knex.QueryBuilder): Promise<T> {
     const criterions: { [key: string]: any } = this.retainPrimaryKeys(tableName, data);
     data = this.removePrimaryKeys(tableName, data);
@@ -27,7 +31,7 @@ export default class Updater extends SchemaOperator {
       if (fn) {
         query = fn(query);
       }
-      await query;
+      await this.runQuery(query);
     }
     return data;
   }

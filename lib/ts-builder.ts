@@ -57,9 +57,7 @@ export default class TsBuilder {
         tinyint: "boolean",
         varchar: "string"
     };
-
-
-
+    
     public settings: ISetting = {
         appendIToDeclaration: true,
         appendIToFileName: true,
