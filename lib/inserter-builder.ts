@@ -24,13 +24,9 @@ export default class Inserter {
       await this.knex.raw(qry.replace("insert", "insert ignore"));				
     }
 
-    async insert<T>(tableName: string, data: T | T[]) {
+    async insert<T>(tableName: string, data: T | T[]): Promise<number[]> {
         let q =  this.knex(tableName).insert(data);
-        try {
-            return await this.knex(tableName).insert(data);
-        } catch (error) {
-            console.log(q.toString());
-        }
+        return await this.knex(tableName).insert(data);
     }
 
     async batchInsert<T>(tableName: string, arr: T[]) {
@@ -42,7 +38,7 @@ export default class Inserter {
 {{#each batchInserters}}{{{this}}}{{/each}}
 }`;
 const INSERT_TEMPLATE = `
-    async insert{{fnName}}(item: {{prefixedClassName}} | {{prefixedClassName}}[]): Promise<{{prefixedClassName}}> {
+    async insert{{fnName}}(item: {{prefixedClassName}} | {{prefixedClassName}}[]): Promise<number[]> {
         return await this.insert("{{tableName}}", item);
     }
 `;

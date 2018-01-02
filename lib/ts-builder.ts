@@ -39,6 +39,7 @@ export default class TsBuilder {
     }
 
     public mysqlTypes = {
+        blob: "any",
         bigint: "string",
         char: "string",
         date: "Date | string",
@@ -84,6 +85,7 @@ export default class TsBuilder {
     }
 
     public renderDefault(folder: string, interfaceFolder: string, relativeInterfaceFolder: string = "./interfaces/") {
+        console.log("Generator started");
         console.log("Generating table file");
         this.renderTableFile(folder);
         console.log("Generating view file");
