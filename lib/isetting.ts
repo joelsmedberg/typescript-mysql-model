@@ -9,4 +9,5 @@ export interface ISetting {
   appendIToFileName: boolean;
   appendIToDeclaration: boolean;
   suffixGeneratedToFilenames: boolean;
+  interfaceFolder: string;
 }

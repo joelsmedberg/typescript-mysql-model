@@ -25,7 +25,6 @@ export default class Inserter {
     }
 
     async insert<T>(tableName: string, data: T | T[]): Promise<number[]> {
-        let q =  this.knex(tableName).insert(data);
         return await this.knex(tableName).insert(data);
     }
 
