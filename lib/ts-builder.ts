@@ -14,6 +14,7 @@ import { TableClass } from "./table-class";
 import { UpdateBuilder } from "./update-builder";
 import { DefinitionBuilder } from "./definition-builder";
 import { AbstractHandlerBuilder } from "./abstract-handler-builder";
+import GraphQlBuilder from "./graphql-builder";
 
 export default class TsBuilder {
     public static async init(knex: Knex, folder: string): Promise<TsBuilder> {
@@ -90,9 +91,15 @@ export default class TsBuilder {
         if (!existsSync(this.intefaceFullPath())) {
             console.log("Mdir:" + this.intefaceFullPath());
             mkdirSync(this.intefaceFullPath());
-        } else {
-            console.log("Folder exists");
         }
+        if (!existsSync(this.graphQlFullPath())) {
+            console.log("Mdir:" + this.graphQlFullPath());
+            mkdirSync(this.graphQlFullPath());
+        }
+
+        console.log("Generating ql files");
+        this.renderGraphQlFiles();
+
         console.log("Generating table file");
         this.renderTableFile();
         console.log("Generating view file");
@@ -118,6 +125,10 @@ export default class TsBuilder {
         return this.folder + this.settings.interfaceFolder;
     }
 
+    private graphQlFullPath(): string {
+        return this.folder + "graphql";
+    }
+
     private renderTableFile(): void {
         const start = "export default class Tables { \n";
         const arr = this.listTables().sort().map(t => "\t static " + change_case.constantCase(t) + " = '" + t + "';");
@@ -136,6 +147,20 @@ export default class TsBuilder {
         const colBuilder = new TableColumnsBuilder(this.schema);
         const content = colBuilder.renderTemplate();
         writeFileSync(this.folder + "columns" + this.getFilenameEnding(), content);
+    }
+
+    private renderGraphQlFiles() {
+        const qlBuilder = new GraphQlBuilder();
+        let tableClasses = this.renderClasses(this.listTables(), this.folder + "graphql/", true);
+        tableClasses.forEach((tc) => {
+            const definition = qlBuilder.renderTs(this.schema.tables[tc.tableName], tc.className);
+            writeFileSync(tc.fullPath, definition);
+        });
+        tableClasses = this.renderClasses(this.listViews(), this.folder + "graphql/", true);
+        tableClasses.forEach(tc => {
+            const definition = qlBuilder.renderTs(this.schema.views[tc.tableName], tc.className);
+            writeFileSync(tc.fullPath, definition);
+        });
     }
 
     private renderClassFiles() {

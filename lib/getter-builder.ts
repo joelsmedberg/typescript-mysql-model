@@ -25,8 +25,11 @@ export default class Getter {
         return reply.shift();        
     }
 
-    private async getFromTable(tableName: string, limit: number = 1000, fn?: (knex: Knex.QueryBuilder) => Knex.QueryBuilder): Promise<any[]> {
-        let query = this.knex(tableName).select().limit(limit);
+    private async getFromTable(tableName: string, fn?: (knex: Knex.QueryBuilder) => Knex.QueryBuilder, limit?: number): Promise<any[]> {
+        let query = this.knex(tableName).select();
+        if(limit){
+            query.limit(limit);
+        }
         if (fn) {
           query = fn(query);
         }
@@ -47,8 +50,8 @@ export default class Getter {
 {{#each singulars}}{{{this}}}{{/each}}
 }`;
 const GET_TEMPLATE = `
-    public get{{fnPlural}}(limit: number = 1000, fn?: (knex: Knex.QueryBuilder) => Knex.QueryBuilder): Promise<{{prefixedClassName}}[]> {
-        return this.getFromTable("{{tableName}}", limit, fn);
+    public get{{fnPlural}}(fn?: (knex: Knex.QueryBuilder) => Knex.QueryBuilder, limit?: number): Promise<{{prefixedClassName}}[]> {
+        return this.getFromTable("{{tableName}}", fn, limit);
     }
 `;
 const GET_SINGULAR = `
