@@ -8,6 +8,13 @@ const template = `/**
 
 import { {{imports}} } from "graphql";
 
+const {{name}}InputType = new GraphQLInputObjectType({
+  fields: {
+    {{fields}}
+  },
+  name: "{{name}}Input"
+})
+
 const {{name}}Type = new GraphQLObjectType({
   fields: {
     {{fields}}
@@ -45,6 +52,7 @@ export default class GraphQlBuilder {
     
     let types = Object.keys(table).map(colName => this.toGraphType(table[colName].type));
     types.push("GraphQLObjectType");
+    types.push("GraphQLInputObjectType");
     types = types.filter((item, pos, self) => self.indexOf(item) === pos).sort();
     const imports = types.join(", ");
     
