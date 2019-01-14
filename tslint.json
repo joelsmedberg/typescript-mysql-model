@@ -1,15 +1,19 @@
 {
     "defaultSeverity": "error",
     "extends": [
-        "tslint:recommended"
+       "tslint:recommended"
     ],
+    
     "ignoreDefinitionFiles":true,
     "jsRules": {},
     "rules": {
+        "no-console": false,
         "arrow-parens":false,
         "forin": false,
         "object-literal-shorthand": false,
-        "trailing-comma": [true, {"multiline": "never", "singleline": "never"}]
+        "trailing-comma": [true, {"multiline": "never", "singleline": "never"}],
+        "variable-name": [true, "ban-keywords", "check-format", "allow-leading-underscore"]
+
     },
     "rulesDirectory": []
 }

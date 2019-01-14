@@ -16,30 +16,39 @@ export default class Getter {
 
     }
 
-    private async getSingle(tableName: string, keyObject: { [key: string]: any }, fn?: (knex: Knex.QueryBuilder) => Knex.QueryBuilder): Promise<any> {
+    private async getSingle(tableName: string, keyObject: { [key: string]: any }, fn?: (knex: Knex.QueryBuilder) => Knex.QueryBuilder | void): Promise<any> {
         let query = this.knex(tableName).select().limit(1).where(keyObject);
         if (fn) {
-            query = fn(query);
-        }        
+            const subQuery = fn(query);
+            if(subQuery){
+                query = subQuery;
+            }
+        } 
         const reply: any[] = await query;
         return reply.shift();        
     }
 
-    private async getFromTable(tableName: string, fn?: (knex: Knex.QueryBuilder) => Knex.QueryBuilder, limit?: number): Promise<any[]> {
+    private async getFromTable(tableName: string, fn?: (knex: Knex.QueryBuilder) => Knex.QueryBuilder | void, limit?: number): Promise<any[]> {
         let query = this.knex(tableName).select();
+        if (fn) {
+            const subQuery = fn(query);
+            if(subQuery){
+                query = subQuery;
+            }
+        }
         if(limit){
             query.limit(limit);
-        }
-        if (fn) {
-          query = fn(query);
         }
         return await query;
     }
 
-    private async countTable(tableName: string, fn?: (knex: Knex.QueryBuilder) => Knex.QueryBuilder): Promise<number> {
+    private async countTable(tableName: string, fn?: (knex: Knex.QueryBuilder) => Knex.QueryBuilder | void): Promise<number> {
         let query = this.knex(tableName).select(this.knex.raw("count(*) as c"));
         if (fn) {
-          query = fn(query);
+            const subQuery = fn(query);
+            if(subQuery){
+                query = subQuery;
+            }
         }
         const reply: Array<{ c: number }> = await query;
         return reply[0].c;
@@ -50,17 +59,17 @@ export default class Getter {
 {{#each singulars}}{{{this}}}{{/each}}
 }`;
 const GET_TEMPLATE = `
-    public get{{fnPlural}}(fn?: (knex: Knex.QueryBuilder) => Knex.QueryBuilder, limit?: number): Promise<{{prefixedClassName}}[]> {
+    public get{{fnPlural}}(fn?: (knex: Knex.QueryBuilder) => Knex.QueryBuilder | void, limit?: number): Promise<{{prefixedClassName}}[]> {
         return this.getFromTable("{{tableName}}", fn, limit);
     }
 `;
 const GET_SINGULAR = `
-    public get{{fnName}}({{#each params}}{{{this}}}{{#unless @last}},{{/unless}}{{/each}}, fn?: (knex: Knex.QueryBuilder) => Knex.QueryBuilder): Promise<{{prefixedClassName}}> {
+    public get{{fnName}}({{#each params}}{{{this}}}{{#unless @last}},{{/unless}}{{/each}}, fn?: (knex: Knex.QueryBuilder) => Knex.QueryBuilder | void): Promise<{{prefixedClassName}}> {
         return this.getSingle("{{tableName}}", { {{#each fields}}{{{this}}}{{#unless @last}},{{/unless}}{{/each}} } ,fn);
     }
 `;
 const COUNT_TEMPLATE = `
-    public count{{fnPlural}}(fn?: (knex: Knex.QueryBuilder) => Knex.QueryBuilder): Promise<number> {
+    public count{{fnPlural}}(fn?: (knex: Knex.QueryBuilder) => Knex.QueryBuilder | void): Promise<number> {
         return this.countTable("{{tableName}}", fn);
     }
 `;
@@ -81,7 +90,7 @@ export class GettersBuilder extends SchemaOperator {
     }
 
     public render(tables: TableClass[], relativePath: string = "./"): string {
-        tables = JSON.parse(JSON.stringify(tables));
+        tables = [...tables];
 
         tables.forEach(t => {
             t.fnName = change_case.upperCaseFirst(t.fnName);
@@ -92,12 +101,12 @@ export class GettersBuilder extends SchemaOperator {
             getters: tables.map(t => this.compiledGetTemplate(t)),
             imports: tables.map(t => this.renderImportRow(t, relativePath)),
             counters: tables.map(t => this.compiledCountInsertTemplate(t)),
-            singulars: tables.filter(t=>t.isTable).map(t => this.compailedGetSingularTemplate(this.renderGetSingularTemplateInput(t)))
+            singulars: tables.filter(t => t.isTable).map(t => this.compailedGetSingularTemplate(this.renderGetSingularTemplateInput(t)))
         };
         return this.compiledTemplate(input);
     }
 
-    private renderGetSingularTemplateInput(t: TableClass) {        
+    private renderGetSingularTemplateInput(t: TableClass) {
         let d: any = t;
         d["fields"] = this.getPrimaryKeyNames(t.tableName);
         d["params"] = this.getPkCols(t.tableName).map(col => {
@@ -107,7 +116,7 @@ export class GettersBuilder extends SchemaOperator {
     }
 
     private renderImportRow(table: TableClass, relativePath: string): string {
-        table = JSON.parse(JSON.stringify(table));
+        table = { ...table };
         table.filename = table.filename.replace(".ts", "");
         return `import {${table.prefixedClassName}} from "${relativePath}${table.filename}"`;
     }

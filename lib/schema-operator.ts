@@ -6,7 +6,7 @@ import { IDatabaseColumn, IDatabaseSchema } from "./mysql-database-definition";
 
 export abstract class SchemaOperator {
 
-  protected definition: IDatabaseSchema;
+  protected definition!: IDatabaseSchema;
   /**
    * Return a copy of the object without any primary keys
    */
@@ -24,7 +24,7 @@ export abstract class SchemaOperator {
 
   protected getPkCols(tableName: string): IDatabaseColumn[] {
     if (!tableName) {
-      return null;
+      return [];
     }
     const cols: IDatabaseColumn[] = [];
     const table = this.definition.tables[tableName];
@@ -58,7 +58,7 @@ export abstract class SchemaOperator {
   protected getPrimaryKeyNames(tableName: string): string[] {
     const cols = this.getPkCols(tableName);
     if (!cols || cols.length === 0) {
-      return null;
+      return [];
     }
     return cols.map(col => col.field);
   }

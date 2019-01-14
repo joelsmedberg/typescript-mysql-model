@@ -38,7 +38,7 @@ export default class TsBuilder {
 
     public readonly mysqlTypes = {
         blob: "any",
-        bigint: "string",
+        bigint: "number",
         char: "string",
         date: "Date | string",
         datetime: "Date | string",
@@ -69,9 +69,12 @@ export default class TsBuilder {
     };
 
     private folder: string;
-
-    constructor(folder: string, private schema?: IDatabaseSchema) {
+    private schema!: IDatabaseSchema
+    constructor(folder: string, schema?: IDatabaseSchema) {
         this.folder = TsBuilder.normFolder(folder);
+        if (schema) {
+            this.schema = schema;
+        }
     }
 
     public getTypeMap(): Map<string, string> {
@@ -258,7 +261,7 @@ export default class TsBuilder {
     }
 
     private getClassName(tableName: string): string {
-        let className = this.settings.singularizeClassNames ? pluralize.singular(tableName) : tableName;
+        const className = this.settings.singularizeClassNames ? pluralize.singular(tableName) : tableName;
         return className;
     }
 

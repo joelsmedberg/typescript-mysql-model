@@ -7,32 +7,34 @@ const template = `/**
 /* tslint:disable */
 
 import { {{imports}} } from "graphql";
+{{{dateimport}}}
+
+const {{name}}TypeFields = {
+  {{fields}}
+};
 
 const {{name}}InputType = new GraphQLInputObjectType({
-  fields: {
-    {{fields}}
-  },
+  fields: {{name}}TypeFields,
   name: "{{name}}Input"
-})
+});
 
 const {{name}}Type = new GraphQLObjectType({
-  fields: {
-    {{fields}}
-  },
+  fields: {{name}}TypeFields,
   name: "{{name}}"
 });
 
-export { {{name}}Type };
-`;
-
+export { {{name}}Type, {{name}}InputType, {{name}}TypeFields };
+`
+const GRAPH_QL_DATE_TIME = "GraphQLDateTime";
+const GRAPH_QL_STRING = "GraphQLString";
 export default class GraphQlBuilder {
   private compiledTemplate = Handlebars.compile(template);
   private readonly mysqlTypes: { [key: string]: string } = {
     blob: "string",
-    bigint: "string",
+    bigint: "int",
     char: "string",
-    date: "string",
-    datetime: "string",
+    date: "datetime",
+    datetime: "datetime",
     decimal: "float",
     double: "float",
     float: "float",
@@ -43,25 +45,30 @@ export default class GraphQlBuilder {
     set: "string",
     smallint: "int",
     text: "string",
-    timestamp: "string",
+    timestamp: "datetime",
     tinyint: "boolean",
     varchar: "string"
   };
 
   public renderTs(table: IDatabaseTable, tableName: string): string {
-    
+
     let types = Object.keys(table).map(colName => this.toGraphType(table[colName].type));
+    let dateimport = "";
+    if (types.some(t => t === GRAPH_QL_DATE_TIME)) {
+      dateimport = 'import { GraphQLDateTime } from "graphql-iso-date";';
+    }
     types.push("GraphQLObjectType");
     types.push("GraphQLInputObjectType");
+    types = types.filter(t => t !== GRAPH_QL_DATE_TIME);
+
     types = types.filter((item, pos, self) => self.indexOf(item) === pos).sort();
     const imports = types.join(", ");
-    
+
     const rows = Object.keys(table).map(colName => this.buildTypeRow(table[colName]));
-    const fields= rows.join(", \n \t\t");
+    const fields = rows.join(", \n \t\t");
 
     const name = changeCase.pascalCase(tableName);
-    const t = this.compiledTemplate({ fields, name, imports });
-    // console.log(t);
+    const t = this.compiledTemplate({ fields, name, imports, dateimport });
     return t;
   }
 
@@ -69,9 +76,11 @@ export default class GraphQlBuilder {
     const s = this.mysqlTypes[mysql];
     switch (s) {
       case "string":
-        return "GraphQLString";
+        return GRAPH_QL_STRING;
       case "float":
         return "GraphQLFloat"
+      case "datetime":
+        return GRAPH_QL_DATE_TIME
       case "int":
         return "GraphQLInt"
       case "boolean":
