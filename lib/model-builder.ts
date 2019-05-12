@@ -127,12 +127,12 @@ export default class ModelBuilder {
 
     private async listStoredProcedures(): Promise<string[]> {
         const SHOW_DB_QUERY = `SHOW PROCEDURE STATUS WHERE Db = ?`;
-        const sps: Array<Array<{ Name: string }>> = await this.knex.raw(SHOW_DB_QUERY, [this.databaseName]);
+        const sps: Array<Array<{ Name: string }>> = await this.knex.raw(SHOW_DB_QUERY, [this.databaseName!]);
         return sps[0].map(sp => sp.Name);
     }
     private async listStoredProcedureParams(): Promise<IStoredProcedureParameter[]> {
         const LIST_PARAM_QUERY = `SELECT * FROM information_schema.parameters WHERE specific_schema = ?`;
-        const params: Array<Array<{ [key: string]: any }>> = await this.knex.raw(LIST_PARAM_QUERY, [this.databaseName]);
+        const params: Array<Array<{ [key: string]: any }>> = await this.knex.raw(LIST_PARAM_QUERY, [this.databaseName!]);
         return params[0].map(item => {
             const copy: { [key: string]: any } = {};
             for (const key in item) {

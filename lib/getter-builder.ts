@@ -59,17 +59,17 @@ export default class Getter {
 {{#each singulars}}{{{this}}}{{/each}}
 }`;
 const GET_TEMPLATE = `
-    public get{{fnPlural}}(fn?: (knex: Knex.QueryBuilder) => Knex.QueryBuilder | void, limit?: number): Promise<{{prefixedClassName}}[]> {
+    public list{{fnName}}(fn?: (knex: Knex.QueryBuilder) => Knex.QueryBuilder | void, limit?: number): Promise<{{prefixedClassName}}[]> {
         return this.getFromTable("{{tableName}}", fn, limit);
     }
 `;
 const GET_SINGULAR = `
-    public get{{fnName}}({{#each params}}{{{this}}}{{#unless @last}},{{/unless}}{{/each}}, fn?: (knex: Knex.QueryBuilder) => Knex.QueryBuilder | void): Promise<{{prefixedClassName}}> {
+    public getSingle{{fnName}}({{#each params}}{{{this}}}{{#unless @last}},{{/unless}}{{/each}}, fn?: (knex: Knex.QueryBuilder) => Knex.QueryBuilder | void): Promise<{{prefixedClassName}}> {
         return this.getSingle("{{tableName}}", { {{#each fields}}{{{this}}}{{#unless @last}},{{/unless}}{{/each}} } ,fn);
     }
 `;
 const COUNT_TEMPLATE = `
-    public count{{fnPlural}}(fn?: (knex: Knex.QueryBuilder) => Knex.QueryBuilder | void): Promise<number> {
+    public count{{fnName}}(fn?: (knex: Knex.QueryBuilder) => Knex.QueryBuilder | void): Promise<number> {
         return this.countTable("{{tableName}}", fn);
     }
 `;

@@ -4,6 +4,17 @@
       {
         "type": "node",
         "request": "launch",
+        "env": {
+          "LOCALHOST": "TRUE",
+          "PORT": "8081",
+          "NODE_ENV": "DEVELOPMENT",
+          "DB_SCHEMA": "auth_mittskolval_se",
+          "DB_USERNAME": "auth_server",
+          "DB_PASSWORD": "Etmj26TTwP4aMdC2",
+          "ACCESS_KEY": "AKIAJ67EQN4PNWHNZL3A",
+          "ACCESS_SECRET": "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",
+          "AUTH_KEY": "Z5aFMd2p2ufkuc6gD9wWzhHkhFKUGAm6"
+        },
         "program": "${workspaceRoot}/test.ts",
         "sourceMaps": true,
         "outFiles": [
