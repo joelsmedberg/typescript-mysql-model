@@ -5,13 +5,13 @@ const template = `/**
  * Auto generated, do not modify!
  */
 /* tslint:disable */
-export default class Columns {
+export namespace COLUMNS {
     {{#each tables}}{{{this}}}{{/each}}
 }
 `;
 
 const tableTemplate = `
-  static readonly {{tableName}} = {
+  export enum {{tableName}} {
     {{{columns}}}
   }
 `;
@@ -36,7 +36,7 @@ export default class TableColumnsBuilder {
     for (const key in table) {
       const field: string = table[key].field;
       const constCase = change_case.constantCase(field);
-      arr.push(`${constCase}: '${field}'`);
+      arr.push(`${constCase} = '${field}'`);
     }
     return arr;
   }

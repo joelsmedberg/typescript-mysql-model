@@ -134,14 +134,14 @@ export default class TsBuilder {
 
     private renderTableFile(): void {
         const start = "export enum TABLE { \n";
-        const arr = this.listTables().sort().map(t => `\tstatic ${change_case.constantCase(t)} = "${t}",`);
+        const arr = this.listTables().sort().map(t => `\t${change_case.constantCase(t)} = "${t}",`);
         const content = this.getMetaText() + start + arr.join("\n") + "\n}";
         writeFileSync(this.folder + "tables" + this.getFilenameEnding(), content);
     }
 
     private renderViewFile(): void {
         const start = "export enum VIEW { \n";
-        const arr = this.listViews().sort().map(t => `\tstatic ${change_case.constantCase(t)} = "${t}",`);
+        const arr = this.listViews().sort().map(t => `\t${change_case.constantCase(t)} = "${t}",`);
         const content = this.getMetaText() + start + arr.join("\n") + "\n}";
         writeFileSync(this.folder + "views" + this.getFilenameEnding(), content);
     }
