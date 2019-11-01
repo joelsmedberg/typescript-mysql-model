@@ -1,20 +1,20 @@
 import * as change_case from "change-case";
-import { writeFileSync, mkdirSync, existsSync } from "fs";
+import { existsSync, mkdirSync, writeFileSync } from "fs";
 import * as Knex from "knex";
 import * as pluralize from "pluralize";
-import { InserterBuilder } from "./inserter-builder";
+import { AbstractHandlerBuilder } from "./abstract-handler-builder";
+import { DefinitionBuilder } from "./definition-builder";
 import { GettersBuilder } from "./getter-builder";
+import GraphQlBuilder from "./graphql-builder";
+import { InserterBuilder } from "./inserter-builder";
 import InterfaceBuilder from "./interface-builder";
 import { ISetting } from "./isetting";
 import ModelBuilder from "./model-builder";
 import { IDatabaseSchema } from "./mysql-database-definition";
 import SpBuilder from "./sp-builder";
-import TableColumnsBuilder from "./table-columns-builder";
 import { TableClass } from "./table-class";
+import TableColumnsBuilder from "./table-columns-builder";
 import { UpdateBuilder } from "./update-builder";
-import { DefinitionBuilder } from "./definition-builder";
-import { AbstractHandlerBuilder } from "./abstract-handler-builder";
-import GraphQlBuilder from "./graphql-builder";
 
 export default class TsBuilder {
     public static async init(knex: Knex, folder: string): Promise<TsBuilder> {
@@ -37,8 +37,8 @@ export default class TsBuilder {
     }
 
     public readonly mysqlTypes = {
-        blob: "any",
         bigint: "number",
+        blob: "any",
         char: "string",
         date: "Date | string",
         datetime: "Date | string",
@@ -69,7 +69,7 @@ export default class TsBuilder {
     };
 
     private folder: string;
-    private schema!: IDatabaseSchema
+    private schema!: IDatabaseSchema;
     constructor(folder: string, schema?: IDatabaseSchema) {
         this.folder = TsBuilder.normFolder(folder);
         if (schema) {
@@ -133,15 +133,15 @@ export default class TsBuilder {
     }
 
     private renderTableFile(): void {
-        const start = "export default class Tables { \n";
-        const arr = this.listTables().sort().map(t => "\t static " + change_case.constantCase(t) + " = '" + t + "';");
+        const start = "export enum TABLE { \n";
+        const arr = this.listTables().sort().map(t => `\tstatic ${change_case.constantCase(t)} = "${t}",`);
         const content = this.getMetaText() + start + arr.join("\n") + "\n}";
         writeFileSync(this.folder + "tables" + this.getFilenameEnding(), content);
     }
 
     private renderViewFile(): void {
-        const start = "export default class Views { \n";
-        const arr = this.listViews().sort().map(t => "\tstatic " + change_case.constantCase(t) + " = '" + t + "';");
+        const start = "export enum VIEW { \n";
+        const arr = this.listViews().sort().map(t => `\tstatic ${change_case.constantCase(t)} = "${t}",`);
         const content = this.getMetaText() + start + arr.join("\n") + "\n}";
         writeFileSync(this.folder + "views" + this.getFilenameEnding(), content);
     }
@@ -196,12 +196,13 @@ export default class TsBuilder {
         const tables = this.listTables();
         const tableClasses = this.renderClasses(tables, this.intefaceFullPath(), true);
         tableClasses.push(...this.renderClasses(this.listViews(), this.intefaceFullPath(), false));
+        // tslint:disable-next-line: max-line-length
         const inserterCotent = new GettersBuilder(this.schema, this.getTypeMap()).render(tableClasses, this.settings.interfaceFolder);
         writeFileSync(this.folder + this.toFilename("getter"), inserterCotent);
     }
 
     private renderSchemaOperator() {
-        let schemaClass = new DefinitionBuilder(this.schema).renderSchema();
+        const schemaClass = new DefinitionBuilder(this.schema).renderSchema();
         writeFileSync(this.folder + this.toFilename("definition"), schemaClass);
 
         const tableClasses = this.renderClasses(this.listTables(), this.intefaceFullPath(), true);
@@ -241,13 +242,13 @@ export default class TsBuilder {
             const filename = this.toFilename(t);
             return {
                 className: this.getClassName(t),
-                prefixedClassName: this.getPrefixedClassName(t),
                 filename: filename,
                 fnName: fnName,
                 fnPlural: fnPlural,
                 fullPath: folder + filename,
-                tableName: t,
-                isTable: isTable
+                isTable: isTable,
+                prefixedClassName: this.getPrefixedClassName(t),
+                tableName: t
             } as TableClass;
         });
     }

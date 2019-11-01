@@ -1,10 +1,10 @@
 export class TableClass {
-    filename: string = "";
-    fullPath: string = "";
-    tableName: string = "";
-    className: string = "";
-    fnName: string = "";
-    fnPlural: string = "";
-    prefixedClassName: string = "";
-    isTable: boolean = false;
+    public className: string = "";
+    public filename: string = "";
+    public fnName: string = "";
+    public fnPlural: string = "";
+    public fullPath: string = "";
+    public isTable: boolean = false;
+    public prefixedClassName: string = "";
+    public tableName: string = "";
 }
