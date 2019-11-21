@@ -16,7 +16,7 @@ export default class ModelBuilder {
      * Return a copy of an object but with all keys lower case
      */
     private static keysToLower<T extends { [key: string]: any }>(obj: T): T {
-        const newobj: T = {} as T;
+        const newobj: any = {} as T;
         Object.keys(obj).forEach(key => newobj[key.toLowerCase()] = obj[key]);
         return newobj;
     }

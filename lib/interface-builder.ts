@@ -3,7 +3,7 @@ import { IDatabaseColumn, IDatabaseTable } from "./mysql-database-definition";
 import { TableClass } from "./table-class";
 
 export default class InterfaceBuilder {
-  constructor(private settings: ISetting, private mysqlTypes: { [key: string]: string }) {
+  constructor(private settings: ISetting, private mysqlTypes: Dict<string>) {
 
   }
 
