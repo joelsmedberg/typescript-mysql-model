@@ -2,16 +2,17 @@ export interface IDatabaseColumn {
     "extra": string;
     "default"?: any;
     "key": string;
-    "null": string|boolean;
+    "null": string | boolean;
     "type": string;
     "field": string;
+    "enumValues": string[] | null;
     "length": number;
     "isPrimary": boolean;
     "index": number;
 }
 
 export interface IDatabaseTable {
-   [columnName: string]: IDatabaseColumn;
+    [columnName: string]: IDatabaseColumn;
 }
 
 export interface ITableDictionary {

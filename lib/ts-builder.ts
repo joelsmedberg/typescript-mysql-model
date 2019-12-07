@@ -4,25 +4,22 @@ import * as Knex from "knex";
 import * as pluralize from "pluralize";
 import { AbstractHandlerBuilder } from "./abstract-handler-builder";
 import { DefinitionBuilder } from "./definition-builder";
+import { EnumBuilder } from "./enums/enum-builder";
 import { GettersBuilder } from "./getter-builder";
-import GraphQlBuilder from "./graphql-builder";
+import { GraphQlBuilder } from "./graphql-builder";
 import { InserterBuilder } from "./inserter-builder";
-import InterfaceBuilder from "./interface-builder";
+import { InterfaceBuilder } from "./interface-builder";
 import { ISetting } from "./isetting";
 import ModelBuilder from "./model-builder";
 import { IDatabaseSchema } from "./mysql-database-definition";
 import SpBuilder from "./sp-builder";
 import { TableClass } from "./table-class";
-import TableColumnsBuilder from "./table-columns-builder";
+import { TableColumnsBuilder } from "./table-columns-builder";
 import { UpdateBuilder } from "./update-builder";
 
-export default class TsBuilder {
-    public static async init(knex: Knex, folder: string): Promise<TsBuilder> {
-        return await new TsBuilder(folder).init(knex);
-    }
-
-    public static async runDefault(knex: Knex, folder: string) {
-        const builder = await TsBuilder.init(knex, folder);
+export class TsBuilder {
+    public static async run(knex: Knex, folder: string) {
+        const builder = await new TsBuilder(folder).init(knex);
         builder.renderDefault();
     }
 
@@ -36,12 +33,13 @@ export default class TsBuilder {
         return folder;
     }
 
-    public readonly mysqlTypes = {
+    private readonly mysqlTypes = {
         bigint: "number",
         blob: "any",
         char: "string",
         date: "Date | string",
         datetime: "Date | string",
+        enum: "string",
         decimal: "number",
         double: "number",
         float: "number",
@@ -90,6 +88,9 @@ export default class TsBuilder {
     }
 
     public renderDefault() {
+        if (!existsSync(this.folder)) {
+            mkdirSync(this.folder);
+        }
         console.log("Generator started");
         if (!existsSync(this.intefaceFullPath())) {
             console.log("Mdir:" + this.intefaceFullPath());
@@ -99,7 +100,15 @@ export default class TsBuilder {
             console.log("Mdir:" + this.graphQlFullPath());
             mkdirSync(this.graphQlFullPath());
         }
-
+        if (!existsSync(this.enumsFullPath())) {
+            console.log("Mdir:" + this.enumsFullPath());
+            mkdirSync(this.enumsFullPath());
+        }
+        if (!existsSync(this.enumsQlFullPath())) {
+            console.log("Mdir:" + this.enumsQlFullPath());
+            mkdirSync(this.enumsQlFullPath());
+        }
+        new EnumBuilder().run(this.schema, this.enumsFullPath(), this.enumsQlFullPath());
         console.log("Generating ql files");
         this.renderGraphQlFiles();
 
@@ -132,6 +141,14 @@ export default class TsBuilder {
         return this.folder + "graphql";
     }
 
+    private enumsFullPath(): string {
+        return this.folder + "enums";
+    }
+
+    private enumsQlFullPath(): string {
+        return this.graphQlFullPath() + "/enums";
+    }
+
     private renderTableFile(): void {
         const start = "export enum TABLE { \n";
         const arr = this.listTables().sort().map(t => `\t${change_case.constantCase(t)} = "${t}",`);
@@ -153,15 +170,15 @@ export default class TsBuilder {
     }
 
     private renderGraphQlFiles() {
-        const qlBuilder = new GraphQlBuilder();
+        const qlBuilder = new GraphQlBuilder(this.schema);
         let tableClasses = this.renderClasses(this.listTables(), this.folder + "graphql/", true);
         tableClasses.forEach((tc) => {
-            const definition = qlBuilder.renderTs(this.schema.tables[tc.tableName], tc.className);
+            const definition = qlBuilder.renderTs(this.schema.tables[tc.tableName], tc);
             writeFileSync(tc.fullPath, definition);
         });
-        tableClasses = this.renderClasses(this.listViews(), this.folder + "graphql/", true);
+        tableClasses = this.renderClasses(this.listViews(), this.folder + "graphql/", false);
         tableClasses.forEach(tc => {
-            const definition = qlBuilder.renderTs(this.schema.views[tc.tableName], tc.className);
+            const definition = qlBuilder.renderTs(this.schema.views[tc.tableName], tc);
             writeFileSync(tc.fullPath, definition);
         });
     }
@@ -169,7 +186,7 @@ export default class TsBuilder {
     private renderClassFiles() {
         const tables = this.listTables();
         const tableClasses = this.renderClasses(tables, this.intefaceFullPath(), true);
-        const interfaceBuilder = new InterfaceBuilder(this.settings, this.mysqlTypes);
+        const interfaceBuilder = new InterfaceBuilder(this.settings, this.mysqlTypes, this.schema);
         tableClasses.forEach(tc => {
             const definition = interfaceBuilder.renderTs(tc, this.schema.tables[tc.tableName]);
             writeFileSync(tc.fullPath, definition);
@@ -178,8 +195,8 @@ export default class TsBuilder {
 
     private renderViewClassFiles() {
         const views = this.listViews();
-        const interfaceBuilder = new InterfaceBuilder(this.settings, this.mysqlTypes);
-        this.renderClasses(views, this.intefaceFullPath(), true).forEach(tc => {
+        const interfaceBuilder = new InterfaceBuilder(this.settings, this.mysqlTypes, this.schema);
+        this.renderClasses(views, this.intefaceFullPath(), false).forEach(tc => {
             const definition = interfaceBuilder.renderTs(tc, this.schema.views[tc.tableName]);
             writeFileSync(tc.fullPath, definition);
         });

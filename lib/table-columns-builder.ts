@@ -16,7 +16,7 @@ const tableTemplate = `
   }
 `;
 
-export default class TableColumnsBuilder {
+export class TableColumnsBuilder {
   private compiledTemplate: HandlebarsTemplateDelegate;
   private compiledTableTemplate: HandlebarsTemplateDelegate;
   constructor(private schema: IDatabaseSchema) {

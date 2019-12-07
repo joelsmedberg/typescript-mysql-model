@@ -23,6 +23,7 @@ export default class ModelBuilder {
 
     /**
      * Return the length of a type, eg varchar(255)=>255
+     * 0 if not parsable
      * @param type
      */
     private static getMysqlLength(strType: string): number {
@@ -40,6 +41,16 @@ export default class ModelBuilder {
             return type.substr(0, pos);
         }
         return type;
+    }
+
+
+    private static getEnumValues(type: string): string[] | null {
+        if (type.startsWith("enum")) {
+            const strList = type.replace("enum(", "").replace(")", "");
+            const list = strList.split(",").map(s => s.replace("'", "").replace("'", ""));
+            return list;
+        }
+        return null;
     }
 
     constructor(private knex: Knex, private databaseName?: string) {
@@ -96,6 +107,7 @@ export default class ModelBuilder {
             colArrMap[tableName] = colArrMap[tableName].map((col, i) => {
                 col = ModelBuilder.keysToLower<IDatabaseColumn>(col);
                 col.length = ModelBuilder.getMysqlLength(col.type);
+                col.enumValues = ModelBuilder.getEnumValues(col.type);
                 col.isPrimary = col.key === "PRI";
                 col.index = i;
                 col.type = ModelBuilder.stripMysqlLength(col.type);

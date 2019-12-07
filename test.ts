@@ -5,4 +5,4 @@ import { Database } from "./test/database";
 
 const output = "./test/database/";
 
-TsBuilder.runDefault(Database.getKnexInstance(), output).then(() => process.exit(0));
+TsBuilder.run(Database.getKnexInstance(), output).then(() => process.exit(0));
