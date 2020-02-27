@@ -63,13 +63,9 @@ export class GraphQlBuilder {
     Object.keys(table).forEach(colName => {
       const column = table[colName];
       if (column.enumValues?.length) {
-        let importTable = tableClass.tableName;
-        let importColumn = column.field;
-        if (!tableClass.isTable) {
-          const eh = this.matcher.run(this.schema, column, tableClass.tableName);
-          importTable = eh?.table!;
-          importColumn = eh?.field!;
-        }
+        const eh = this.matcher.run(this.schema, column, tableClass.tableName);
+        const importTable = eh?.table!;
+        const importColumn = eh?.field!;
         extraImports.add(this.importTableStatement(importTable, [importColumn]));
         return;
       }
@@ -117,11 +113,8 @@ export class GraphQlBuilder {
   private buildTypeRow(column: IDatabaseColumn, tableClass: TableClass): string {
     let graphType = "";
     if (column.enumValues?.length) {
-      let importColumn = column.field;
-      if (!tableClass.isTable) {
-        const eh = this.matcher.run(this.schema, column, tableClass.tableName);
-        importColumn = eh?.field!;
-      }
+      const eh = this.matcher.run(this.schema, column, tableClass.tableName);
+      const importColumn = eh?.field!;
       graphType = changeCase.pascalCase(importColumn) + "Enum";
     } else {
       graphType = this.toGraphType(column.type);
