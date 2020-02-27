@@ -16,6 +16,7 @@ import SpBuilder from "./sp-builder";
 import { TableClass } from "./table-class";
 import { TableColumnsBuilder } from "./table-columns-builder";
 import { UpdateBuilder } from "./update-builder";
+import { EnumWriter } from "./enums/enum-writer";
 
 export class TsBuilder {
     public static async run(knex: Knex, folder: string) {
@@ -108,7 +109,8 @@ export class TsBuilder {
             console.log("Mdir:" + this.enumsQlFullPath());
             mkdirSync(this.enumsQlFullPath());
         }
-        new EnumBuilder().run(this.schema, this.enumsFullPath(), this.enumsQlFullPath());
+        const enums = new EnumBuilder().run(this.schema);
+        new EnumWriter().run(enums, this.enumsFullPath(), this.enumsQlFullPath());
         console.log("Generating ql files");
         this.renderGraphQlFiles();
 

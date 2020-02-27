@@ -1,23 +1,24 @@
-import { IDatabaseSchema, IDatabaseTable, IDatabaseColumn } from "../mysql-database-definition";
-import { IEnumHolder } from "./enum-builder";
+import { IDatabaseColumn, IDatabaseSchema } from "../mysql-database-definition";
+import { IEnumHolder, EnumBuilder } from "./enum-builder";
+import { equalAsSets } from "./misc";
 
 export class EnumMatcher {
-  public run(schema: IDatabaseSchema, viewColumn: IDatabaseColumn, viewName: string) {
-    const tableEnums: IEnumHolder[] = [];
-    for (const tableKey in schema.tables) {
-      const table = schema.tables[tableKey];
-      const enums = this.enumArr(table, tableKey)
-      tableEnums.push(...enums);
+  public run(schema: IDatabaseSchema, column: IDatabaseColumn, viewName: string) {
+    const enums = new EnumBuilder().run(schema);
+    const candidates = enums.filter(e => e.table === viewName && column.field === e.field);
+    if (candidates.length === 1) {
+      return candidates[0].replacedBy || candidates[0];
     }
-    return this.findCorresponding({
-      field: viewColumn.field,
+    const bestMatch = this.findCorresponding({
+      field: column.field,
       table: viewName,
-      options: viewColumn.enumValues || []
-    }, tableEnums);
+      options: column.enumValues || []
+    }, enums);
+    return bestMatch?.replacedBy || bestMatch;
   }
 
   private findCorresponding(view: IEnumHolder, tableEnums: IEnumHolder[]): IEnumHolder | undefined {
-    const matches = tableEnums.filter(t => (t.options.every((to, i) => to === view.options[i])));
+    const matches = tableEnums.filter(t => equalAsSets(t.options, view.options));
     if (matches.length === 1) {
       return matches[0];
     }
@@ -28,6 +29,8 @@ export class EnumMatcher {
     });
     return matches[0];
   }
+
+
 
   private similarity(s1: string, s2: string) {
     var longer = s1;
@@ -68,21 +71,6 @@ export class EnumMatcher {
         costs[s2.length] = lastValue;
     }
     return costs[s2.length];
-  }
-
-  private enumArr(table: IDatabaseTable, tableName: string): IEnumHolder[] {
-    const enums: IEnumHolder[] = [];
-    for (const colKey in table) {
-      const column = table[colKey];
-      if (column.type === "enum" && column.enumValues) {
-        enums.push({
-          field: column.field,
-          table: tableName,
-          options: column.enumValues
-        });
-      }
-    }
-    return enums;
   }
 }
 

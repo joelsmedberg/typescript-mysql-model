@@ -20,7 +20,7 @@ export class InterfaceBuilder {
     let stringBuilder = this.settings.defaultClassModifier + " " + tableClass.prefixedClassName + " { \n";
     for (const colName in table) {
       const col = table[colName];
-      stringBuilder += this.buildTypeRow(col, tableClass, colName);
+      stringBuilder += this.buildTypeRow(col, colName);
       if (this.isEnum(col)) {
         extraImports.push(col);
       }
@@ -28,17 +28,17 @@ export class InterfaceBuilder {
     stringBuilder += "}\n";
     const importStatements = new Set<string>();
     if (extraImports.length) {
-      if (tableClass.isTable) {
-        let relativePath = "../enums/" + changeCase.paramCase(tableClass.tableName) + ".generated";
-        const tableImportArr = [changeCase.constant(tableClass.tableName)];
-        importStatements.add(this.importStatement(tableImportArr, relativePath));
-      } else {
-        const bestMatches = extraImports.map(c => this.matcher.run(this.schema, c, tableClass.tableName)!);
-        bestMatches.forEach(b => {
-          let relativePath = "../enums/" + changeCase.paramCase(b.table) + ".generated";
-          importStatements.add(this.importStatement([changeCase.constant(b.table)], relativePath));
-        });
-      }
+      // if (tableClass.isTable) {
+      //   let relativePath = "../enums/" + changeCase.paramCase(tableClass.tableName) + ".generated";
+      //   const tableImportArr = [changeCase.constant(tableClass.tableName)];
+      //   importStatements.add(this.importStatement(tableImportArr, relativePath));
+      // } else {
+      const bestMatches = extraImports.map(c => this.matcher.run(this.schema, c, tableClass.tableName)!);
+      bestMatches.forEach(b => {
+        let relativePath = "../enums/" + changeCase.paramCase(b.table) + ".generated";
+        importStatements.add(this.importStatement([changeCase.constant(b.table)], relativePath));
+      });
+      // }
     }
     const importStr = [...importStatements].join("");
     return this.getMetaText() + "\n" + importStr + "\n" + stringBuilder;
@@ -54,10 +54,10 @@ export class InterfaceBuilder {
     return meta;
   }
 
-  private buildTypeRow(col: IDatabaseColumn, tableClass: TableClass, colName: string): string {
+  private buildTypeRow(col: IDatabaseColumn, colName: string): string {
     const tabs = "\t";
     const optional = this.settings.optionalParameters ? "?" : "";
-    const tsType = this.getTsType(col, tableClass, colName);
+    const tsType = this.getTsType(col, colName);
     const field = col.field;
     return `${tabs}"${field}"${optional}: ${tsType};\n`;
   }
@@ -66,17 +66,20 @@ export class InterfaceBuilder {
     return !!col.enumValues?.length;
   }
 
-  private getTsType(col: IDatabaseColumn, tableClass: TableClass, colName: string): string {
+  private getTsType(col: IDatabaseColumn, colName: string): string {
     if (this.isEnum(col)) {
-      if (tableClass.isTable) {
-        return changeCase.constantCase(tableClass.tableName) + "." + changeCase.constantCase(col.field);
-      } else {
-        const matches = this.matcher.run(this.schema, col, colName);
-        if (!matches) {
-          throw new Error("No matching column");
-        }
-        return changeCase.constantCase(matches.table) + "." + changeCase.constantCase(matches.field);
+      // if (tableClass.isTable) {
+      //   return changeCase.constantCase(tableClass.tableName) + "." + changeCase.constantCase(col.field);
+      // } else {
+      const matches = this.matcher.run(this.schema, col, colName);
+      if (!matches) {
+        throw new Error("No matching column");
       }
+      if(matches.replacementFor?.length){
+        return changeCase.constantCase(matches.field);
+      }
+      return changeCase.constantCase(matches.table!) + "." + changeCase.constantCase(matches.field);
+      // }
     }
     let ts = this.mysqlTypes[col.type];
     if (!ts) {
