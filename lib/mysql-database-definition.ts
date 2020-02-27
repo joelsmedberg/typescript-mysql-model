@@ -29,13 +29,13 @@ export interface IStoredProcedureParameter {
     parameterMode: string;
     parameterName: string;
     dataType: string;
-    characterMaximumLength: number;
-    characterOctetLength: number;
+    characterMaximumLength: number | null;
+    characterOctetLength: number | null;
     numericPrecision: number;
     numericScale: number;
     datetimePrecision: any;
-    characterSetName: string;
-    collationName: string;
+    characterSetName: string | null;
+    collationName: string | null;
     dtdIdentifier: string;
     specificCatalog: string;
     specificSchema: string;
