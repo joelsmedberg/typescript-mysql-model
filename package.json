@@ -28,7 +28,7 @@
   "dependencies": {
     "change-case": "^3.1.0",
     "handlebars": "^4.7.3",
-    "knex": "^0.16.3",
+    "knex": "^0.19.5",
     "mysql": "^2.16.0",
     "pluralize": "^5.0.0"
   },
