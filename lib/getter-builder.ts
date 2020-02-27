@@ -28,7 +28,7 @@ export default class Getter {
         return reply.shift();        
     }
 
-    private async getFromTable(tableName: string, fn?: (knex: Knex.QueryBuilder) => Knex.QueryBuilder | void, limit?: number): Promise<any[]> {
+    private async getFromTable(tableName: string, fn?: (knex: Knex.QueryBuilder) => Knex.QueryBuilder | void): Promise<any[]> {
         let query = this.knex(tableName).select();
         if (fn) {
             const subQuery = fn(query);
@@ -36,31 +36,15 @@ export default class Getter {
                 query = subQuery;
             }
         }
-        if(limit){
-            query.limit(limit);
-        }
         return await query;
     }
 
-    private async countTable(tableName: string, fn?: (knex: Knex.QueryBuilder) => Knex.QueryBuilder | void): Promise<number> {
-        let query = this.knex(tableName).select(this.knex.raw("count(*) as c"));
-        if (fn) {
-            const subQuery = fn(query);
-            if(subQuery){
-                query = subQuery;
-            }
-        }
-        const reply: Array<{ c: number }> = await query;
-        return reply[0].c;
-    }
-
 {{#each getters}}{{{this}}}{{/each}}
-{{#each counters}}{{{this}}}{{/each}}
 {{#each singulars}}{{{this}}}{{/each}}
 }`;
 const GET_TEMPLATE = `
-    public list{{fnName}}(fn?: (knex: Knex.QueryBuilder) => Knex.QueryBuilder | void, limit?: number): Promise<{{prefixedClassName}}[]> {
-        return this.getFromTable("{{tableName}}", fn, limit);
+    public list{{fnName}}(fn?: (knex: Knex.QueryBuilder) => Knex.QueryBuilder | void): Promise<{{prefixedClassName}}[]> {
+        return this.getFromTable("{{tableName}}", fn);
     }
 `;
 const GET_SINGULAR = `
@@ -68,16 +52,10 @@ const GET_SINGULAR = `
         return this.getSingle("{{tableName}}", { {{#each fields}}{{{this}}}{{#unless @last}},{{/unless}}{{/each}} } ,fn);
     }
 `;
-const COUNT_TEMPLATE = `
-    public count{{fnName}}(fn?: (knex: Knex.QueryBuilder) => Knex.QueryBuilder | void): Promise<number> {
-        return this.countTable("{{tableName}}", fn);
-    }
-`;
 
 export class GettersBuilder extends SchemaOperator {
     private compiledTemplate: HandlebarsTemplateDelegate;
     private compiledGetTemplate: HandlebarsTemplateDelegate;
-    private compiledCountInsertTemplate: HandlebarsTemplateDelegate;
     private compailedGetSingularTemplate: HandlebarsTemplateDelegate;
 
     constructor(model: IDatabaseSchema, private typeMap: Map<string, string>) {
@@ -85,7 +63,6 @@ export class GettersBuilder extends SchemaOperator {
         this.definition = model;
         this.compiledTemplate = handlebars.compile(TEMPLATE);
         this.compiledGetTemplate = handlebars.compile(GET_TEMPLATE);
-        this.compiledCountInsertTemplate = handlebars.compile(COUNT_TEMPLATE);
         this.compailedGetSingularTemplate = handlebars.compile(GET_SINGULAR);
     }
 
@@ -100,7 +77,6 @@ export class GettersBuilder extends SchemaOperator {
         const input = {
             getters: tables.map(t => this.compiledGetTemplate(t)),
             imports: tables.map(t => this.renderImportRow(t, relativePath)),
-            counters: tables.map(t => this.compiledCountInsertTemplate(t)),
             singulars: tables.filter(t => t.isTable).map(t => this.compailedGetSingularTemplate(this.renderGetSingularTemplateInput(t)))
         };
         return this.compiledTemplate(input);
