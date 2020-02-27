@@ -39,6 +39,7 @@ export interface IStoredProcedureParameter {
     dtdIdentifier: string;
     specificCatalog: string;
     specificSchema: string;
+    routineType: string;
 }
 
 export interface IStoredProcedure {
