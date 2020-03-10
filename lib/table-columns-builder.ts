@@ -4,7 +4,7 @@ import { IDatabaseSchema, IDatabaseTable, ITableDictionary } from "./mysql-datab
 const template = `/**
  * Auto generated, do not modify!
  */
-/* tslint:disable */
+/* eslint-disable */
 export namespace COLUMNS {
     {{#each tables}}{{{this}}}{{/each}}
 }

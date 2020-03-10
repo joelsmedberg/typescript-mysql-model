@@ -51,9 +51,9 @@ export class EnumMatcher {
     s2 = s2.toLowerCase();
 
     var costs = new Array();
-    for (var i = 0; i <= s1.length; i++) {
+    for (var i = 0; i <= s1.length; i += 1) {
       var lastValue = i;
-      for (var j = 0; j <= s2.length; j++) {
+      for (var j = 0; j <= s2.length; j += 1) {
         if (i == 0)
           costs[j] = j;
         else {
