@@ -17,7 +17,8 @@ export class InterfaceBuilder {
 
   public renderTs(tableClass: TableClass, table: IDatabaseTable): string {
     const extraImports: IDatabaseColumn[] = [];
-    let stringBuilder = this.settings.defaultClassModifier + " " + tableClass.prefixedClassName + " { \n";
+    const maybeEquals = tableClass.useInterface === "type" ? "=" : "";
+    let stringBuilder = `${this.settings.defaultClassModifier} ${tableClass.useInterface} ${tableClass.prefixedClassName} ${maybeEquals} { \n`;
     for (const colName in table) {
       const col = table[colName];
       stringBuilder += this.buildTypeRow(col, colName);
@@ -62,7 +63,7 @@ export class InterfaceBuilder {
     const optional = this.settings.optionalParameters ? "?" : "";
     const tsType = this.getTsType(col, colName);
     const field = col.field;
-    return `${tabs}"${field}"${optional}: ${tsType};\n`;
+    return `${tabs}${field}${optional}: ${tsType};\n`;
   }
   ;
   private isEnum(col: IDatabaseColumn) {
@@ -70,19 +71,16 @@ export class InterfaceBuilder {
   }
 
   private getTsType(col: IDatabaseColumn, colName: string): string {
+    const maybeNull = col.null === "YES" ? " | null" : "";
     if (this.isEnum(col)) {
-      // if (tableClass.isTable) {
-      //   return changeCase.constantCase(tableClass.tableName) + "." + changeCase.constantCase(col.field);
-      // } else {
       const matches = this.matcher.run(this.schema, col, colName);
       if (!matches) {
         throw new Error("No matching column");
       }
       if (matches.replacementFor?.length) {
-        return changeCase.constantCase(matches.field);
+        return changeCase.constantCase(matches.field) + maybeNull;
       }
-      return changeCase.constantCase(matches.table!) + "." + changeCase.constantCase(matches.field);
-      // }
+      return changeCase.constantCase(matches.table!) + "." + changeCase.constantCase(matches.field) + maybeNull;
     }
     let ts = this.mysqlTypes[col.type];
     if (!ts) {
@@ -90,6 +88,6 @@ export class InterfaceBuilder {
       console.error("Unknown type " + col.type);
       return "unknown";
     }
-    return ts;
+    return ts + maybeNull;
   }
 }

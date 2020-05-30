@@ -1,5 +1,5 @@
 {
-  "version": "1.6.1",
+  "version": "1.7.0",
   "name": "typescript-mysql-model",
   "description": "",
   "main": "index.js",
@@ -35,7 +35,7 @@
   "devDependencies": {
     "@types/handlebars": "^4.0.32",
     "@types/knex": "0.0.56",
-    "@types/node": "^8.0.11",
+    "@types/node": "^14.0.6",
     "@types/pluralize": "0.0.27",
     "@types/rimraf": "^2.0.3",
     "rimraf": "^3.0.2",

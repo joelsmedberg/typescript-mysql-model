@@ -1,8 +1,8 @@
 export interface IDatabaseColumn {
-    "extra": string;
-    "default"?: any;
-    "key": string;
-    "null": string | boolean;
+    "extra": "" | "auto_increment";
+    "default": null | "CURRENT_TIMESTAMP" | "0";
+    "key": "" | "PRI";
+    "null": "NO" | "YES";
     "type": string;
     "field": string;
     "enumValues": string[] | null;

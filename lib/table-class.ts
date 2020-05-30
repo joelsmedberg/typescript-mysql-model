@@ -7,4 +7,5 @@ export class TableClass {
     public isTable: boolean = false;
     public prefixedClassName: string = "";
     public tableName: string = "";
+    public useInterface: "type" | "interface" = "type";
 }

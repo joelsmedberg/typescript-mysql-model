@@ -60,9 +60,10 @@ export class TsBuilder {
         appendIToDeclaration: true,
         appendIToFileName: true,
         camelCaseFnNames: true,
-        defaultClassModifier: "export interface",
+        defaultClassModifier: "export",
+
         interfaceFolder: "./interfaces/",
-        optionalParameters: true,
+        optionalParameters: false,
         singularizeClassNames: true,
         suffixGeneratedToFilenames: true
     };
@@ -269,6 +270,7 @@ export class TsBuilder {
                 fnPlural: fnPlural,
                 fullPath: folder + filename,
                 isTable: isTable,
+                useInterface: "type",
                 prefixedClassName: this.getPrefixedClassName(t),
                 tableName: t
             } as TableClass;
