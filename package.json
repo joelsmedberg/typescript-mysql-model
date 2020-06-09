@@ -1,5 +1,5 @@
 {
-  "version": "1.7.0",
+  "version": "1.8.5",
   "name": "typescript-mysql-model",
   "description": "",
   "main": "index.js",
@@ -27,8 +27,8 @@
   "homepage": "https://github.com/joelsmedberg/typescript-mysql-model#readme",
   "dependencies": {
     "change-case": "^3.1.0",
-    "handlebars": "^4.7.3",
-    "knex": "^0.16.3",
+    "handlebars": "^4.7.6",
+    "knex": "^0.21.1",
     "mysql": "^2.16.0",
     "pluralize": "^5.0.0"
   },

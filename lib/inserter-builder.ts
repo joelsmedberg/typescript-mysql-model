@@ -37,12 +37,12 @@ export default class Inserter {
 {{#each batchInserters}}{{{this}}}{{/each}}
 }`;
 const INSERT_TEMPLATE = `
-    async insert{{fnName}}(item: {{prefixedClassName}} | {{prefixedClassName}}[]): Promise<number[]> {
+    async insert{{fnName}}(item: {{className}}InsertType | {{className}}InsertType[]): Promise<number[]> {
         return await this.insert("{{tableName}}", item);
     }
 `;
 const BATCH_INSERT_TEMPLATE = `
-    async batchInsert{{fnPlural}}(item: {{prefixedClassName}}[]) {
+    async batchInsert{{fnPlural}}(item: {{className}}InsertType[]) {
         return await this.batchInsert("{{tableName}}", item);
     }
 `;
@@ -75,6 +75,6 @@ export class InserterBuilder {
     private renderImportRow(table: TableClass, relativePath: string): string {
         table = JSON.parse(JSON.stringify(table));
         table.filename = table.filename.replace(".ts", "");
-        return `import {${table.prefixedClassName}} from "${relativePath}${table.filename}"`;
+        return `import {${table.className}InsertType} from "${relativePath}${table.filename}"`;
     }
 }

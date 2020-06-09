@@ -21,7 +21,7 @@ export class InterfaceBuilder {
     let stringBuilder = `${this.settings.defaultClassModifier} ${tableClass.useInterface} ${tableClass.prefixedClassName} ${maybeEquals} { \n`;
     for (const colName in table) {
       const col = table[colName];
-      stringBuilder += this.buildTypeRow(col, colName);
+      stringBuilder += this.variableTypeRow(col, colName);
       if (this.isEnum(col)) {
         extraImports.push(col);
       }
@@ -29,20 +29,15 @@ export class InterfaceBuilder {
     stringBuilder += "}\n";
     const importStatements = new Set<string>();
     if (extraImports.length) {
-      // if (tableClass.isTable) {
-      //   let relativePath = "../enums/" + changeCase.paramCase(tableClass.tableName) + ".generated";
-      //   const tableImportArr = [changeCase.constant(tableClass.tableName)];
-      //   importStatements.add(this.importStatement(tableImportArr, relativePath));
-      // } else {
       const bestMatches = extraImports.map(c => this.matcher.run(this.schema, c, tableClass.tableName)!);
       bestMatches.forEach(b => {
         let relativePath = "../enums/" + changeCase.paramCase(b.table) + ".generated";
         importStatements.add(this.importStatement([changeCase.constant(b.table)], relativePath));
       });
-      // }
     }
+    const inputSection = tableClass.isTable ? "\n\n" + this.renderInsertType(tableClass, table) + "\n\n" + this.renderUpdateType(tableClass, table) : "";
     const importStr = [...importStatements].join("");
-    return this.getMetaText() + "\n" + importStr + "\n" + stringBuilder;
+    return this.getMetaText() + "\n" + importStr + "\n" + stringBuilder + inputSection;
   }
 
   private importStatement(fieldNames: string[], relativePath: string) {
@@ -58,14 +53,30 @@ export class InterfaceBuilder {
     return meta;
   }
 
-  private buildTypeRow(col: IDatabaseColumn, colName: string): string {
+  private variableTypeRow(col: IDatabaseColumn, colName: string): string {
     const tabs = "\t";
     const optional = this.settings.optionalParameters ? "?" : "";
     const tsType = this.getTsType(col, colName);
     const field = col.field;
     return `${tabs}${field}${optional}: ${tsType};\n`;
   }
-  ;
+
+  private variableTypeRowInsertItem(col: IDatabaseColumn, colName: string): string {
+    const tabs = "\t";
+    const optional = (col.null === "YES" || col.default !== null) ? "?" : "";
+    const tsType = this.getTsType(col, colName);
+    const field = col.field;
+    return `${tabs}${field}${optional}: ${tsType};\n`;
+  }
+
+  private variableTypeRowUpdateItem(col: IDatabaseColumn, colName: string): string {
+    const tabs = "\t";
+    const optional = (col.isPrimary) ? "" : "?";
+    const tsType = this.getTsType(col, colName);
+    const field = col.field;
+    return `${tabs}${field}${optional}: ${tsType};\n`;
+  }
+
   private isEnum(col: IDatabaseColumn) {
     return !!col.enumValues?.length;
   }
@@ -89,5 +100,32 @@ export class InterfaceBuilder {
       return "unknown";
     }
     return ts + maybeNull;
+  }
+
+  public renderUpdateType(tableClass: TableClass, table: IDatabaseTable): string {
+    const maybeEquals = tableClass.useInterface === "type" ? "=" : "";
+    let stringBuilder = `${this.settings.defaultClassModifier} ${tableClass.useInterface} ${tableClass.className}UpdateType ${maybeEquals} { \n`;
+    for (const colName in table) {
+      const col = table[colName];
+      if (col.default !== "CURRENT_TIMESTAMP") {
+        stringBuilder += this.variableTypeRowUpdateItem(col, colName);
+      }
+    }
+    stringBuilder += "}\n";
+    return stringBuilder;
+  }
+
+  public renderInsertType(tableClass: TableClass, table: IDatabaseTable): string {
+    const maybeEquals = tableClass.useInterface === "type" ? "=" : "";
+    let stringBuilder = `${this.settings.defaultClassModifier} ${tableClass.useInterface} ${tableClass.className}InsertType ${maybeEquals} { \n`;
+    for (const colName in table) {
+      const col = table[colName];
+      const remove = col.extra === "auto_increment" || col.default === "CURRENT_TIMESTAMP";
+      if (!remove) {
+        stringBuilder += this.variableTypeRowInsertItem(col, colName);
+      }
+    }
+    stringBuilder += "}\n";
+    return stringBuilder;
   }
 }

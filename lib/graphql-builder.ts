@@ -11,21 +11,24 @@ const template = `/**
 import { {{imports}} } from "graphql";
 {{{extraImportStr}}}
 
-const {{name}}TypeFields = {
-  {{fields}}
+const {{name}}InsertTypeFields = {
+  {{insertFields}}
+};
+const {{name}}SelectTypeFields = {
+  {{selectFields}}
 };
 
 const {{name}}InputType = new GraphQLInputObjectType({
-  fields: {{name}}TypeFields,
+  fields: {{name}}InsertTypeFields,
   name: "{{name}}Input"
 });
 
 const {{name}}Type = new GraphQLObjectType({
-  fields: {{name}}TypeFields,
+  fields: {{name}}SelectTypeFields,
   name: "{{name}}"
 });
 
-export { {{name}}Type, {{name}}InputType, {{name}}TypeFields };
+export { {{name}}Type, {{name}}InputType, {{name}}InsertTypeFields, {{name}}SelectTypeFields };
 `
 const GRAPH_QL_DATE_TIME = "GraphQLDateTime";
 const GRAPH_QL_STRING = "GraphQLString";
@@ -76,13 +79,18 @@ export class GraphQlBuilder {
         stdTypes.add(qlType);
       }
     });
+    const rowsInsert = Object.keys(table).map(colName => this.buildTypeRow(table[colName], tableClass, true));
+    const rowsSelect = Object.keys(table).map(colName => this.buildTypeRow(table[colName], tableClass, false));
+    if (rowsSelect.some(t => t.includes("GraphQLNonNull"))) {
+      stdTypes.add("GraphQLNonNull");
+    }
     const imports = [...stdTypes].sort().join(", ");
     const extraImportStr = [...extraImports].join("\n");
-    const rows = Object.keys(table).map(colName => this.buildTypeRow(table[colName], tableClass));
-    const fields = rows.join(", \n \t\t");
+    const insertFields = rowsInsert.join(", \n \t");
+    const selectFields = rowsSelect.join(", \n \t");
 
     const name = changeCase.pascalCase(tableClass.tableName);
-    const t = this.compiledTemplate({ fields, name, imports, extraImportStr });
+    const t = this.compiledTemplate({ insertFields, selectFields, name, imports, extraImportStr });
     return t;
   }
 
@@ -110,7 +118,7 @@ export class GraphQlBuilder {
     }
   }
 
-  private buildTypeRow(column: IDatabaseColumn, tableClass: TableClass): string {
+  private buildTypeRow(column: IDatabaseColumn, tableClass: TableClass, insertType: boolean): string {
     let graphType = "";
     if (column.enumValues?.length) {
       const eh = this.matcher.run(this.schema, column, tableClass.tableName);
@@ -118,6 +126,9 @@ export class GraphQlBuilder {
       graphType = changeCase.pascalCase(importColumn) + "Enum";
     } else {
       graphType = this.toGraphType(column.type);
+    }
+    if (column.null === "NO" && !insertType) {
+      graphType = `GraphQLNonNull(${graphType})`;
     }
     return `${column.field}: { type: ${graphType} }`;
   }

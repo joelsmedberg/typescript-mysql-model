@@ -38,36 +38,36 @@ export default class Updater extends SchemaOperator {
 {{#each updaters}}{{{this}}}{{/each}}
 }`;
 const UPDATE_TEMPLATE = `
-    public update{{fnName}}(item: {{prefixedClassName}}, fn?: (knex: Knex.QueryBuilder) => Knex.QueryBuilder): Promise<{{prefixedClassName}}> {
+    public update{{fnName}}(item: {{className}}UpdateType, fn?: (knex: Knex.QueryBuilder) => Knex.QueryBuilder): Promise<{{className}}UpdateType> {
       return this.update("{{tableName}}", item, fn);
     }
 `;
 
 export class UpdateBuilder {
-    private compiledTemplate: HandlebarsTemplateDelegate;
-    private compiledUpdateTemplate: HandlebarsTemplateDelegate;    
+  private compiledTemplate: HandlebarsTemplateDelegate;
+  private compiledUpdateTemplate: HandlebarsTemplateDelegate;
 
-    constructor() {
-        this.compiledTemplate = handlebars.compile(TEMPLATE);
-        this.compiledUpdateTemplate = handlebars.compile(UPDATE_TEMPLATE);        
-    }
+  constructor() {
+    this.compiledTemplate = handlebars.compile(TEMPLATE);
+    this.compiledUpdateTemplate = handlebars.compile(UPDATE_TEMPLATE);
+  }
 
-    public renderUpdater(tables: TableClass[], relativePath: string = "./"): string {
-        tables = JSON.parse(JSON.stringify(tables));
-        tables.forEach(t => {
-            t.fnName = change_case.upperCaseFirst(t.fnName);
-            t.fnPlural = change_case.upperCaseFirst(t.fnPlural);
-        });
-        const input = {
-            updaters: tables.map(t => this.compiledUpdateTemplate(t)),
-            imports: tables.map(t => this.renderImportRow(t, relativePath))
-        };
-        return this.compiledTemplate(input);
-    }
+  public renderUpdater(tables: TableClass[], relativePath: string = "./"): string {
+    tables = JSON.parse(JSON.stringify(tables));
+    tables.forEach(t => {
+      t.fnName = change_case.upperCaseFirst(t.fnName);
+      t.fnPlural = change_case.upperCaseFirst(t.fnPlural);
+    });
+    const input = {
+      updaters: tables.map(t => this.compiledUpdateTemplate(t)),
+      imports: tables.map(t => this.renderImportRow(t, relativePath))
+    };
+    return this.compiledTemplate(input);
+  }
 
-    private renderImportRow(table: TableClass, relativePath: string): string {
-        table = JSON.parse(JSON.stringify(table));
-        table.filename = table.filename.replace(".ts", "");
-        return `import {${table.prefixedClassName}} from "${relativePath}${table.filename}"`;
-    }
+  private renderImportRow(table: TableClass, relativePath: string): string {
+    table = JSON.parse(JSON.stringify(table));
+    table.filename = table.filename.replace(".ts", "");
+    return `import { ${table.className}UpdateType } from "${relativePath}${table.filename}"`;
+  }
 }

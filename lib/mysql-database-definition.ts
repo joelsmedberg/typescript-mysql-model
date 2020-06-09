@@ -1,7 +1,7 @@
 export interface IDatabaseColumn {
-    "extra": "" | "auto_increment";
-    "default": null | "CURRENT_TIMESTAMP" | "0";
-    "key": "" | "PRI";
+    "extra": "" | "auto_increment" | "on update CURRENT_TIMESTAMP";
+    "default"?: null | "CURRENT_TIMESTAMP" | string;
+    "key": "" | "PRI" | "MUL";
     "null": "NO" | "YES";
     "type": string;
     "field": string;
