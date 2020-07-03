@@ -41,7 +41,7 @@ export default class SpBuilder {
     for (const key in this.procedures) {
       strFunctions.push(this.renderFunction(this.procedures[key]));
     }
-    const input = { strFunctions: strFunctions };
+    const input = { strFunctions: strFunctions.sort() };
     const output = this.compiledTemplate(input);
     return output;
   }

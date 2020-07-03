@@ -77,7 +77,7 @@ export default class ModelBuilder {
     /**
      * return a select query to list all tables or views from a database
      */
-    private listFromDatabase(listType: string): string {
+    private listFromDatabase(listType: "BASE TABLE" | "VIEW"): string {
         if (listType !== "BASE TABLE" && listType !== "VIEW") {
             throw new Error("Illegal listtype");
         }
@@ -85,12 +85,17 @@ export default class ModelBuilder {
         const from = "`information_schema`.`TABLES`";
         const dbClause = "`information_schema`.`TABLES`.`TABLE_SCHEMA` = '" + this.databaseName + "'";
         const baseTable = "`information_schema`.`TABLES`.`TABLE_TYPE` = '" + listType + "'";
-        return `SELECT ${select} FROM ${from} WHERE ${dbClause} AND ${baseTable} `;
+        return `SELECT ${select} FROM ${from} WHERE ${dbClause} AND ${baseTable} ORDER BY tname`;
     }
 
     private async listViews(): Promise<string[]> {
-        const rows: Array<Array<{ tname: string }>> = await this.knex.raw(this.listFromDatabase(LIST_TYPE_VIEW));
-        return rows[0].map(item => item.tname);
+        try {
+            const rows: Array<Array<{ tname: string }>> = await this.knex.raw(this.listFromDatabase(LIST_TYPE_VIEW));
+            return rows[0].map(item => item.tname);
+        } catch (e) {
+            console.log("unable to list views");
+            throw e;
+        }
     }
 
     /**
@@ -124,7 +129,12 @@ export default class ModelBuilder {
      * List all columns for a table given table name
      */
     private async listColumns(tableName: string): Promise<IDatabaseColumn[]> {
-        return await this.knex.raw("SHOW COLUMNS FROM " + tableName).then(colData => colData[0]);
+        try {
+            return await this.knex.raw("SHOW COLUMNS FROM " + tableName).then(colData => colData[0]);
+        } catch (e) {
+            console.log("unable to fetch columns for " + tableName);
+            throw e;
+        }
     }
 
     private async renderModel(tables: string[]) {
@@ -143,15 +153,21 @@ export default class ModelBuilder {
         return sps[0].map(sp => sp.Name);
     }
     private async listStoredProcedureParams(): Promise<IStoredProcedureParameter[]> {
-        const LIST_PARAM_QUERY = `SELECT * FROM information_schema.parameters WHERE specific_schema = ?`;
-        const params: Array<Array<{ [key: string]: any }>> = await this.knex.raw(LIST_PARAM_QUERY, [this.databaseName!]);
-        return params[0].map(item => {
-            const copy: { [key: string]: any } = {};
-            for (const key in item) {
-                copy[change_case.camelCase(key)] = item[key];
-            }
-            return copy as IStoredProcedureParameter;
-        });
+        try {
+            const LIST_PARAM_QUERY = `SELECT * FROM information_schema.parameters WHERE specific_schema = ?`;
+            const params: Array<Array<{ [key: string]: any }>> = await this.knex.raw(LIST_PARAM_QUERY, [this.databaseName!]);
+            return params[0].map(item => {
+                const copy: { [key: string]: any } = {};
+                for (const key in item) {
+                    copy[change_case.camelCase(key)] = item[key];
+                }
+                return copy as IStoredProcedureParameter;
+            });
+        } catch (e) {
+            console.error("UNable to load stored procedures");
+            throw e;
+        }
+
     }
 
     private async renderStoredProcedures(): Promise<IStoredProcedureDictionary> {

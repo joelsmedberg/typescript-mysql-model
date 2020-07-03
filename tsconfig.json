@@ -33,7 +33,7 @@
   },
   "exclude": [
     "node_modules",
-    // "test/database/",
+    // "test/database/generated/",
     "build"
   ]
 }

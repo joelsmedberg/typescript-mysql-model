@@ -72,12 +72,12 @@ export class GettersBuilder extends SchemaOperator {
         tables.forEach(t => {
             t.fnName = change_case.upperCaseFirst(t.fnName);
             t.fnPlural = change_case.upperCaseFirst(t.fnPlural);
-
         });
+        tables.sort((a, b) => a.className.localeCompare(b.className));
         const input = {
-            getters: tables.map(t => this.compiledGetTemplate(t)),
-            imports: tables.map(t => this.renderImportRow(t, relativePath)),
-            singulars: tables.filter(t => t.isTable).map(t => this.compailedGetSingularTemplate(this.renderGetSingularTemplateInput(t)))
+            getters: tables.map(t => this.compiledGetTemplate(t)).sort(),
+            imports: tables.map(t => this.renderImportRow(t, relativePath)).sort(),
+            singulars: tables.filter(t => t.isTable).map(t => this.compailedGetSingularTemplate(this.renderGetSingularTemplateInput(t))).sort()
         };
         return this.compiledTemplate(input);
     }

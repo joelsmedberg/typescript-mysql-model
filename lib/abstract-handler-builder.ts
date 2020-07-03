@@ -8,7 +8,7 @@ export class AbstractHandlerBuilder {
  * Auto generated, do not modify!
  */
 /* eslint-disable */
-import { Database } from "./database";
+import { Database } from "../database";
 import { Definition } from "./definition.generated";
 import Getter from "./getter.generated";
 import Inserter from "./inserter.generated";

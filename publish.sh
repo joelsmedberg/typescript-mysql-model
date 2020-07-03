@@ -1,5 +1,5 @@
 rm -rf ./build
-rm -rf ./test/database/
+rm -rf ./test/database/generated/
 tsc
 cd build
 rm -rf test

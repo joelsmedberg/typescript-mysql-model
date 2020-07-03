@@ -59,8 +59,8 @@ export class UpdateBuilder {
       t.fnPlural = change_case.upperCaseFirst(t.fnPlural);
     });
     const input = {
-      updaters: tables.map(t => this.compiledUpdateTemplate(t)),
-      imports: tables.map(t => this.renderImportRow(t, relativePath))
+      updaters: tables.map(t => this.compiledUpdateTemplate(t)).sort(),
+      imports: tables.map(t => this.renderImportRow(t, relativePath)).sort()
     };
     return this.compiledTemplate(input);
   }

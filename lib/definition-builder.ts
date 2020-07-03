@@ -1,5 +1,7 @@
 import * as handlebars from "handlebars";
 import { IDatabaseSchema } from "./mysql-database-definition";
+const deepSort = require("deep-sort-object");
+
 const TEMPLATE = `/**
  * Auto generated, do not modify!
  */
@@ -28,7 +30,8 @@ export class DefinitionBuilder {
   }
 
   public renderSchema(): string {
-    return this.compiledTemplate({ schema: JSON.stringify(this.model, undefined, 2) });
+    const sorted = deepSort(this.model);
+    return this.compiledTemplate({ schema: JSON.stringify(sorted, undefined, 2) });
   }
 
 }

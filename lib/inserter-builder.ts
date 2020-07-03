@@ -64,10 +64,11 @@ export class InserterBuilder {
             t.fnName = change_case.upperCaseFirst(t.fnName);
             t.fnPlural = change_case.upperCaseFirst(t.fnPlural);
         });
+        tables.sort((a, b) => a.className.localeCompare(b.className));
         const input = {
-            batchInserters: tables.map(t => this.compiledBatchInsertTemplate(t)),
-            imports: tables.map(t => this.renderImportRow(t, relativePath)),
-            inserters: tables.map(t => this.compiledInsertTemplate(t))
+            batchInserters: tables.map(t => this.compiledBatchInsertTemplate(t)).sort(),
+            imports: tables.map(t => this.renderImportRow(t, relativePath)).sort(),
+            inserters: tables.map(t => this.compiledInsertTemplate(t)).sort()
         };
         return this.compiledTemplate(input);
     }
