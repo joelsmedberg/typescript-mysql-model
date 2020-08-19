@@ -1,7 +1,7 @@
 export interface IDatabaseColumn {
     "extra": "" | "auto_increment" | "on update CURRENT_TIMESTAMP";
     "default"?: null | "CURRENT_TIMESTAMP" | string;
-    "key": "" | "PRI" | "MUL";
+    "key": "" | "PRI" | "MUL" | "UNI";
     "null": "NO" | "YES";
     "type": string;
     "field": string;
@@ -31,8 +31,8 @@ export interface IStoredProcedureParameter {
     dataType: string;
     characterMaximumLength: number | null;
     characterOctetLength: number | null;
-    numericPrecision: number;
-    numericScale: number;
+    numericPrecision: number | null;
+    numericScale: number | null;
     datetimePrecision: any;
     characterSetName: string | null;
     collationName: string | null;
