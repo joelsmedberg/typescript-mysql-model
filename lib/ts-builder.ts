@@ -176,8 +176,12 @@ export class TsBuilder {
         const qlBuilder = new GraphQlBuilder(this.schema);
         let tableClasses = this.renderClasses(this.listTables(), this.folder + "graphql/", true);
         tableClasses.forEach((tc) => {
-            const definition = qlBuilder.renderTs(this.schema.tables[tc.tableName], tc);
-            writeFileSync(tc.fullPath, definition);
+            try {
+                const definition = qlBuilder.renderTs(this.schema.tables[tc.tableName], tc);
+                writeFileSync(tc.fullPath, definition);
+            } catch (error) {
+                console.log(tc.className + " could not be parsed " + error.message);
+            }
         });
         tableClasses = this.renderClasses(this.listViews(), this.folder + "graphql/", false);
         tableClasses.forEach(tc => {

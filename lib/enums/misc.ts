@@ -24,37 +24,3 @@ export function setsEqual(aSet: Set<string>, bSet: Set<string>): boolean {
   }
   return [...aSet].every(value => bSet.has(value));
 }
-
-export function graphqlCompliantToValue(value: string) {
-  if (!value) {
-    return value;
-  }
-  const translations = {
-    "AO__": "Å",
-    "AE__": "Ä",
-    "OE__": "Ö"
-  };
-  Object.entries(translations).forEach(t => {
-    while (value.indexOf(t[0]) !== -1) {
-      value = value.replace(t[0], t[1])
-    }
-  });
-  return value;
-}
-
-export function valueToGraphqlCompliant(value: string) {
-  if (!value) {
-    return value;
-  }
-  const translations = {
-    "Å": "AO__",
-    "Ä": "AE__",
-    "Ö": "OE__",
-  };
-  Object.entries(translations).forEach(t => {
-    while (value.indexOf(t[0]) !== -1) {
-      value = value.replace(t[0], t[1])
-    }
-  });
-  return value;
-}

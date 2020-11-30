@@ -1,9 +1,9 @@
-process.env.NODE_ENV = "MODE-DEV";
+// process.env.NODE_ENV = "MODE-DEV";
 
-import { TsBuilder } from "./";
-import { Database } from "./test/database";
-import * as rimraf from "rimraf";
+// import { TsBuilder } from "./";
+// import { Database } from "./test/database";
+// import * as rimraf from "rimraf";
 
-const output = "./test/database/generated/";
-rimraf.sync(output);
-TsBuilder.run(Database.getKnexInstance(), output).then(() => process.exit(0));
+// const output = "./test/database/generated/";
+// rimraf.sync(output);
+// TsBuilder.run(Database.getKnexInstance(), output).then(() => process.exit(0));

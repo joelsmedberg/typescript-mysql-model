@@ -1,7 +1,7 @@
 import * as changeCase from "change-case";
 import * as fs from "fs";
 import { IEnumHolder } from "./enum-builder";
-import { groupBy, valueToGraphqlCompliant } from "./misc";
+import { groupBy } from "./misc";
 export class QlEnumBuilder {
   public static render(enums: IEnumHolder[], outputDir: string): void {
     const dict = groupBy(enums.filter(e => !e.replacedBy), "table");
@@ -22,8 +22,7 @@ export class QlEnumBuilder {
 
   private static createEnum(column: string, values: string[]): string {
     const rows = values.map(v => {
-      const qlCompliant = valueToGraphqlCompliant(v);
-      return `${qlCompliant}: { value: "${v}" }`
+      return `${v}: { value: "${v}" }`
     });
     return `const ${changeCase.camel(column)} = new GraphQLEnumType({
   name: "${changeCase.constantCase(column)}",
