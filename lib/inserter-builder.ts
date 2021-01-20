@@ -24,38 +24,36 @@ export default class Inserter {
       await this.knex.raw(qry.replace("insert", "insert ignore"));				
     }
 
-    async insert<T>(tableName: string, data: T | T[]): Promise<number[]> {
-        return await this.knex(tableName).insert(data);
+    async insert(tableName: string, data: { [key: string]: any } | Array<{ [key: string]: any }>, chunkSize = 1000): Promise<number[]> {
+        let copy = Array.isArray(data) ? data : [data];
+        const reply = await this.knex.batchInsert(tableName, copy, chunkSize);
+        return reply;
     }
 
-    async batchInsert<T>(tableName: string, arr: T[]) {
-		let chunkSize = 1000;
-		await this.knex.batchInsert(tableName, arr, chunkSize);
-    }
 
 {{#each inserters}}{{{this}}}{{/each}}
-{{#each batchInserters}}{{{this}}}{{/each}}
+
 }`;
 const INSERT_TEMPLATE = `
     async insert{{fnName}}(item: {{className}}InsertType | {{className}}InsertType[]): Promise<number[]> {
         return await this.insert("{{tableName}}", item);
     }
 `;
-const BATCH_INSERT_TEMPLATE = `
-    async batchInsert{{fnPlural}}(item: {{className}}InsertType[]) {
-        return await this.batchInsert("{{tableName}}", item);
-    }
-`;
+// const BATCH_INSERT_TEMPLATE = `
+//     async batchInsert{{fnPlural}}(item: {{className}}InsertType[]) {
+//         return await this.batchInsert("{{tableName}}", item);
+//     }
+// `;
 
 export class InserterBuilder {
     private compiledTemplate: HandlebarsTemplateDelegate;
     private compiledInsertTemplate: HandlebarsTemplateDelegate;
-    private compiledBatchInsertTemplate: HandlebarsTemplateDelegate;
+    // private compiledBatchInsertTemplate: HandlebarsTemplateDelegate;
 
     constructor() {
         this.compiledTemplate = handlebars.compile(TEMPLATE);
         this.compiledInsertTemplate = handlebars.compile(INSERT_TEMPLATE);
-        this.compiledBatchInsertTemplate = handlebars.compile(BATCH_INSERT_TEMPLATE);
+        // this.compiledBatchInsertTemplate = handlebars.compile(BATCH_INSERT_TEMPLATE);
     }
 
     public render(tables: TableClass[], relativePath: string = "./"): string {
@@ -66,7 +64,7 @@ export class InserterBuilder {
         });
         tables.sort((a, b) => a.className.localeCompare(b.className));
         const input = {
-            batchInserters: tables.map(t => this.compiledBatchInsertTemplate(t)).sort(),
+            // batchInserters: tables.map(t => this.compiledBatchInsertTemplate(t)).sort(),
             imports: tables.map(t => this.renderImportRow(t, relativePath)).sort(),
             inserters: tables.map(t => this.compiledInsertTemplate(t)).sort()
         };
